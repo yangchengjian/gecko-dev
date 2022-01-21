@@ -37,7 +37,7 @@ smallvec = "1"
 thiserror = "1"
 
 [dependencies.naga]
-git = "https://github.com/gfx-rs/naga"
+git = "ssh://git@github.com/gfx-rs/naga"
 rev = "8ffd6ba"
 #version = "0.7"
 features = ["span", "validate", "wgsl-in"]

@@ -207,7 +207,7 @@ dependencies = [
 [[package]]
 name = "audioipc"
 version = "0.2.5"
-source = "git+https://github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
+source = "git+ssh://git@github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
 dependencies = [
  "ashmem",
  "audio_thread_priority",
@@ -236,7 +236,7 @@ dependencies = [
 [[package]]
 name = "audioipc-client"
 version = "0.4.0"
-source = "git+https://github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
+source = "git+ssh://git@github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
@@ -251,7 +251,7 @@ dependencies = [
 [[package]]
 name = "audioipc-server"
 version = "0.2.3"
-source = "git+https://github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
+source = "git+ssh://git@github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
@@ -267,7 +267,7 @@ dependencies = [
 [[package]]
 name = "audioipc2"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=978b4082bdc7d8e1aa58dd49e45cdc81beacb333#978b4082bdc7d8e1aa58dd49e45cdc81beacb333"
+source = "git+ssh://git@github.com/kinetiknz/audioipc-2?rev=978b4082bdc7d8e1aa58dd49e45cdc81beacb333#978b4082bdc7d8e1aa58dd49e45cdc81beacb333"
 dependencies = [
  "ashmem",
  "audio_thread_priority",
@@ -292,7 +292,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-client"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=978b4082bdc7d8e1aa58dd49e45cdc81beacb333#978b4082bdc7d8e1aa58dd49e45cdc81beacb333"
+source = "git+ssh://git@github.com/kinetiknz/audioipc-2?rev=978b4082bdc7d8e1aa58dd49e45cdc81beacb333#978b4082bdc7d8e1aa58dd49e45cdc81beacb333"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -303,7 +303,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-server"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=978b4082bdc7d8e1aa58dd49e45cdc81beacb333#978b4082bdc7d8e1aa58dd49e45cdc81beacb333"
+source = "git+ssh://git@github.com/kinetiknz/audioipc-2?rev=978b4082bdc7d8e1aa58dd49e45cdc81beacb333#978b4082bdc7d8e1aa58dd49e45cdc81beacb333"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -846,7 +846,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=dea28d0c7d9952bbf430701ee244f6a4349c98f1#dea28d0c7d9952bbf430701ee244f6a4349c98f1"
+source = "git+ssh://git@github.com/mozilla/cubeb-coreaudio-rs?rev=dea28d0c7d9952bbf430701ee244f6a4349c98f1#dea28d0c7d9952bbf430701ee244f6a4349c98f1"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -1147,7 +1147,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=dea28d0c7d9952bbf430701ee244f6a4349c98f1#dea28d0c7d9952bbf430701ee244f6a4349c98f1"
+source = "git+ssh://git@github.com/mozilla/cubeb-coreaudio-rs?rev=dea28d0c7d9952bbf430701ee244f6a4349c98f1#dea28d0c7d9952bbf430701ee244f6a4349c98f1"
 dependencies = [
  "atomic",
  "audio-mixer",
@@ -1165,7 +1165,7 @@ dependencies = [
 [[package]]
 name = "cubeb-pulse"
 version = "0.3.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02#f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02"
+source = "git+ssh://git@github.com/mozilla/cubeb-pulse-rs?rev=f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02#f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02"
 dependencies = [
  "cubeb-backend",
  "pulse",
@@ -1459,7 +1459,7 @@ checksum = "ff511d5dc435d703f4971bc399647c9bc38e20cb41452e3b9feb4765419ed3f3"
 [[package]]
 name = "error-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
+source = "git+ssh://git@github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
 
 [[package]]
 name = "etagere"
@@ -2143,7 +2143,7 @@ checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 [[package]]
 name = "glow"
 version = "0.11.1"
-source = "git+https://github.com/grovesNL/glow?rev=5851ca6#5851ca65e6b6f4f2c59683245c07de1843c85452"
+source = "git+ssh://git@github.com/grovesNL/glow?rev=5851ca6#5851ca65e6b6f4f2c59683245c07de1843c85452"
 dependencies = [
  "js-sys",
  "slotmap",
@@ -2487,7 +2487,7 @@ dependencies = [
 [[package]]
 name = "interrupt-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
+source = "git+ssh://git@github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
 
 [[package]]
 name = "intl-memoizer"
@@ -2575,7 +2575,7 @@ version = "0.3.100"
 [[package]]
 name = "jsparagus"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
+source = "git+ssh://git@github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
 dependencies = [
  "jsparagus-ast",
  "jsparagus-emitter",
@@ -2589,7 +2589,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-ast"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
+source = "git+ssh://git@github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
 dependencies = [
  "bumpalo",
  "indexmap",
@@ -2598,7 +2598,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-emitter"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
+source = "git+ssh://git@github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
 dependencies = [
  "bumpalo",
  "byteorder",
@@ -2611,7 +2611,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-generated-parser"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
+source = "git+ssh://git@github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
 dependencies = [
  "bumpalo",
  "jsparagus-ast",
@@ -2621,12 +2621,12 @@ dependencies = [
 [[package]]
 name = "jsparagus-json-log"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
+source = "git+ssh://git@github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
 
 [[package]]
 name = "jsparagus-parser"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
+source = "git+ssh://git@github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
 dependencies = [
  "arrayvec 0.5.2",
  "bumpalo",
@@ -2638,7 +2638,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-scope"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
+source = "git+ssh://git@github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
 dependencies = [
  "indexmap",
  "jsparagus-ast",
@@ -2648,7 +2648,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-stencil"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
+source = "git+ssh://git@github.com/mozilla-spidermonkey/jsparagus?rev=a1a6ba41f0c610ebe751639f25f037474ca52941#a1a6ba41f0c610ebe751639f25f037474ca52941"
 dependencies = [
  "jsparagus-ast",
 ]
@@ -2716,7 +2716,7 @@ dependencies = [
 [[package]]
 name = "l10nregistry"
 version = "0.3.0"
-source = "git+https://github.com/mozilla/l10nregistry-rs.git?rev=9da98c6e5325a5f2997191727eaa82c0ebc2004c#9da98c6e5325a5f2997191727eaa82c0ebc2004c"
+source = "git+ssh://git@github.com/mozilla/l10nregistry-rs.git?rev=9da98c6e5325a5f2997191727eaa82c0ebc2004c#9da98c6e5325a5f2997191727eaa82c0ebc2004c"
 dependencies = [
  "async-trait",
  "fluent-bundle",
@@ -2963,7 +2963,7 @@ dependencies = [
 [[package]]
 name = "mapped_hyph"
 version = "0.4.3"
-source = "git+https://github.com/jfkthame/mapped_hyph.git?rev=746743227485a83123784df0c53227ab466612ed#746743227485a83123784df0c53227ab466612ed"
+source = "git+ssh://git@github.com/jfkthame/mapped_hyph.git?rev=746743227485a83123784df0c53227ab466612ed#746743227485a83123784df0c53227ab466612ed"
 dependencies = [
  "arrayref",
  "log",
@@ -3177,7 +3177,7 @@ dependencies = [
 [[package]]
 name = "mio-named-pipes"
 version = "0.1.6"
-source = "git+https://github.com/kinetiknz/mio-named-pipes?rev=21c26326f5f45f415c49eac4ba5bc41a2f961321#21c26326f5f45f415c49eac4ba5bc41a2f961321"
+source = "git+ssh://git@github.com/kinetiknz/mio-named-pipes?rev=21c26326f5f45f415c49eac4ba5bc41a2f961321#21c26326f5f45f415c49eac4ba5bc41a2f961321"
 dependencies = [
  "log",
  "mio 0.6.23",
@@ -3328,7 +3328,7 @@ dependencies = [
 [[package]]
 name = "mp4parse"
 version = "0.13.0"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=3bfc47d9a571d0842676043ba60716318e946c06#3bfc47d9a571d0842676043ba60716318e946c06"
+source = "git+ssh://git@github.com/mozilla/mp4parse-rust?rev=3bfc47d9a571d0842676043ba60716318e946c06#3bfc47d9a571d0842676043ba60716318e946c06"
 dependencies = [
  "bitreader",
  "byteorder",
@@ -3346,7 +3346,7 @@ version = "0.1.0"
 [[package]]
 name = "mp4parse_capi"
 version = "0.13.0"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=3bfc47d9a571d0842676043ba60716318e946c06#3bfc47d9a571d0842676043ba60716318e946c06"
+source = "git+ssh://git@github.com/mozilla/mp4parse-rust?rev=3bfc47d9a571d0842676043ba60716318e946c06#3bfc47d9a571d0842676043ba60716318e946c06"
 dependencies = [
  "byteorder",
  "fallible_collections",
@@ -3374,7 +3374,7 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 [[package]]
 name = "naga"
 version = "0.7.1"
-source = "git+https://github.com/gfx-rs/naga?rev=8ffd6ba#8ffd6ba929b4b93c9564f08fe8bb34b23fa72a6f"
+source = "git+ssh://git@github.com/gfx-rs/naga?rev=8ffd6ba#8ffd6ba929b4b93c9564f08fe8bb34b23fa72a6f"
 dependencies = [
  "bit-set",
  "bitflags",
@@ -3539,7 +3539,7 @@ dependencies = [
 [[package]]
 name = "nss_build_common"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
+source = "git+ssh://git@github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
 
 [[package]]
 name = "nsstring"
@@ -4029,7 +4029,7 @@ dependencies = [
 [[package]]
 name = "pulse"
 version = "0.3.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02#f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02"
+source = "git+ssh://git@github.com/mozilla/cubeb-pulse-rs?rev=f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02#f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02"
 dependencies = [
  "bitflags",
  "pulse-ffi",
@@ -4038,7 +4038,7 @@ dependencies = [
 [[package]]
 name = "pulse-ffi"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02#f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02"
+source = "git+ssh://git@github.com/mozilla/cubeb-pulse-rs?rev=f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02#f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02"
 dependencies = [
  "libc",
 ]
@@ -4728,7 +4728,7 @@ dependencies = [
 [[package]]
 name = "sql-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
+source = "git+ssh://git@github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
 dependencies = [
  "ffi-support",
  "interrupt-support",
@@ -4917,7 +4917,7 @@ dependencies = [
 [[package]]
 name = "sync-guid"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
+source = "git+ssh://git@github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
 dependencies = [
  "base64 0.12.3",
  "rand",
@@ -4928,7 +4928,7 @@ dependencies = [
 [[package]]
 name = "sync15-traits"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
+source = "git+ssh://git@github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
 dependencies = [
  "anyhow",
  "ffi-support",
@@ -5456,7 +5456,7 @@ checksum = "5fecdca9a5291cc2b8dcf7dc02453fee791a280f3743cb0905f8822ae463b3fe"
 [[package]]
 name = "viaduct"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
+source = "git+ssh://git@github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
 dependencies = [
  "ffi-support",
  "log",
@@ -5603,7 +5603,7 @@ dependencies = [
 [[package]]
 name = "webext-storage"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
+source = "git+ssh://git@github.com/mozilla/application-services?rev=c51b63595a27a6ef45161012323e0261475c10c9#c51b63595a27a6ef45161012323e0261475c10c9"
 dependencies = [
  "error-support",
  "ffi-support",
@@ -5753,7 +5753,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.11.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=1e593a6#1e593a6bd3e60796d00604d803c77bfb41ef3232"
+source = "git+ssh://git@github.com/gfx-rs/wgpu?rev=1e593a6#1e593a6bd3e60796d00604d803c77bfb41ef3232"
 dependencies = [
  "arrayvec 0.7.2",
  "bitflags",
@@ -5776,7 +5776,7 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.11.2"
-source = "git+https://github.com/gfx-rs/wgpu?rev=1e593a6#1e593a6bd3e60796d00604d803c77bfb41ef3232"
+source = "git+ssh://git@github.com/gfx-rs/wgpu?rev=1e593a6#1e593a6bd3e60796d00604d803c77bfb41ef3232"
 dependencies = [
  "arrayvec 0.7.2",
  "ash",
@@ -5813,7 +5813,7 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.11.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=1e593a6#1e593a6bd3e60796d00604d803c77bfb41ef3232"
+source = "git+ssh://git@github.com/gfx-rs/wgpu?rev=1e593a6#1e593a6bd3e60796d00604d803c77bfb41ef3232"
 dependencies = [
  "bitflags",
  "bitflags_serde_shim",
