@@ -1,0 +1,21 @@
+[package]
+
+name = "glm"
+version = "0.2.3"
+authors = [
+    "Che Kenan <chekenan@gmail.com>",
+    "Nerijus Arlauskas <nercury@gmail.com>",
+    "Fredrik Norén",
+    "Cameron Hart <https://github.com/bitshifter>",
+    "human9 <https://github.com/human9>"
+]
+
+description = "GLSL mathematics for Rust."
+keywords = ["glm", "math", "opengl", "glsl"]
+license = "MIT"
+repository = "https://github.com/dche/glm-rs/"
+
+[dependencies]
+rand = "^0.3.14"
+num = "^0.1.36"
+quickcheck = "^0.2.27"
