@@ -75,7 +75,7 @@ pub struct ArCore {
 
     renderer_background_: Option<BackgroundRenderer>,
     renderer_point_cloud_: Option<PointCloudRenderer>,
-    renderer_plane_: Option<PlaneRenderer>,
+    // renderer_plane_: Option<PlaneRenderer>,
 
     plane_obj_map_: HashMap<i32, ColoredAnchor>,
     point_obj_map_: HashMap<i32, ColoredAnchor>,
@@ -151,7 +151,7 @@ impl ArCore {
                 background_texture_id: 0,
 
                 renderer_background_: None,
-                renderer_plane_: None,
+                // renderer_plane_: None,
                 renderer_point_cloud_: None,
 
                 plane_obj_map_: HashMap::new(),
@@ -469,7 +469,7 @@ impl ArCore {
         self.renderer_background_ = Some(bgr);
 
         let plr = PlaneRenderer::new(gl);
-        self.renderer_plane_ = Some(plr);
+        // self.renderer_plane_ = Some(plr);
 
         let pcr = PointCloudRenderer::new(gl);
         self.renderer_point_cloud_ = Some(pcr);
@@ -543,7 +543,7 @@ impl ArCore {
                 let p = util::get_mat4_from_array(self.proj_mat4x4);
                 let v = util::get_mat4_from_array(self.view_mat4x4);
 
-                self.clone().renderer_plane_.unwrap().draw(gl, p, v, self.ar_session, ar_plane, ::glm::vec3(255.0, 255.0, 255.0));
+                // self.clone().renderer_plane_.unwrap().draw(gl, p, v, self.ar_session, ar_plane, ::glm::vec3(255.0, 255.0, 255.0));
             }
 
             ArTrackableList_destroy(plane_list);

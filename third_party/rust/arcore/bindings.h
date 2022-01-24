@@ -12,9 +12,6 @@ struct HashMap;
 template<typename T = void>
 struct Option;
 
-template<typename T = void>
-struct Vec;
-
 struct BackgroundRenderer {
   GLuint shader_program_;
   GLuint texture_id_;
@@ -29,21 +26,6 @@ struct PointCloudRenderer {
   GLuint shader_program_;
   GLuint attribute_vertices_;
   GLuint uniform_mvp_mat_;
-};
-
-struct PlaneRenderer {
-  Vec<Vec3> vertices_;
-  Vec<GLushort> triangles_;
-  float model_mat_[16];
-  Vec3 normal_vec_;
-  GLuint texture_id_;
-  GLuint shader_program_;
-  GLuint attri_vertices_;
-  GLuint uniform_mvp_mat_;
-  GLuint uniform_texture_;
-  GLuint uniform_model_mat_;
-  GLuint uniform_normal_vec_;
-  GLuint uniform_color_;
 };
 
 struct ColoredAnchor {
@@ -65,7 +47,6 @@ struct ArCore {
   GLuint background_texture_id;
   Option<BackgroundRenderer> renderer_background_;
   Option<PointCloudRenderer> renderer_point_cloud_;
-  Option<PlaneRenderer> renderer_plane_;
   HashMap<int32_t, ColoredAnchor> plane_obj_map_;
   HashMap<int32_t, ColoredAnchor> point_obj_map_;
   HashMap<int32_t, ColoredAnchor> image_obj_map_;

@@ -186,13 +186,13 @@ impl Configuration {
     }
 
     /// Returns the layout direction
-    pub fn layout_direction(&self) -> LayoutDir {
-        unsafe {
-            (ffi::AConfiguration_getLayoutDirection(self.ptr.as_ptr()) as u32)
-                .try_into()
-                .unwrap()
-        }
-    }
+    // pub fn layout_direction(&self) -> LayoutDir {
+    //     unsafe {
+    //         (ffi::AConfiguration_getLayoutDirection(self.ptr.as_ptr()) as u32)
+    //             .try_into()
+    //             .unwrap()
+    //     }
+    // }
 
     /// Returns the mobile country code.
     pub fn mcc(&self) -> i32 {

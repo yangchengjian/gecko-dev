@@ -75,11 +75,11 @@ localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
 processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
 
+arcore = { path = "../../../../third_party/rust/arcore" }
+
 [target.'cfg(not(target_os = "android"))'.dependencies]
 viaduct = { git = "ssh://git@github.com/mozilla/application-services", rev = "c51b63595a27a6ef45161012323e0261475c10c9"}
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
-
-arcore = { path = "../../../../third_party/rust/arcore" }
 
 [features]
 default = []
