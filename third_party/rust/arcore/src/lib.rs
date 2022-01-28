@@ -7,8 +7,8 @@ mod augmented_image;
 mod jni_interface;
 pub mod log;
 mod renderer_background;
-mod renderer_plane;
-mod renderer_point_cloud;
+// mod renderer_plane;
+// mod renderer_point_cloud;
 mod util;
 
 #[cfg(target_os = "android")]
@@ -17,7 +17,6 @@ extern crate jni;
 extern crate jni_sys;
 extern crate nalgebra_glm;
 extern crate ndk;
-extern crate ndk_glue;
 extern crate ndk_sys;
 extern crate rgb;
 extern crate sparkle;
@@ -27,23 +26,38 @@ use std::collections::HashMap;
 use jni_sys::JavaVM;
 use jni_sys::JNIEnv;
 use jni_sys::jobject;
-use sparkle::gl;
+use opengles::glesv2;
 
 use crate::ffi_arcore::*;
 use crate::renderer_background::BackgroundRenderer;
-use crate::renderer_plane::PlaneRenderer;
-use crate::renderer_point_cloud::PointCloudRenderer;
+// use crate::renderer_plane::PlaneRenderer;
+// use crate::renderer_point_cloud::PointCloudRenderer;
 
-// max model number
-const K_MAX_NUMBER_OF_ANDROIDS_TO_RENDER: usize = 20;
 
 // initial ArCore
 #[no_mangle]
 pub unsafe extern "C" fn init_arcore() -> ArCore {
-    log::i("arcore::lib::init_arcore");
-
+    log::i("arcore::c::init_arcore");
     let (env, context) = jni_interface::init_jni();
     ArCore::new(env, context)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn on_display_changed(mut arcore: ArCore, display_rotation: i32, width: i32, height: i32) {
+    log::i("arcore::c::on_display_changed");
+    arcore.on_display_changed(display_rotation, width, height)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn on_draw(mut arcore: ArCore) {
+    log::i("arcore::c::on_draw");
+    arcore.on_draw()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn get_proj_matrix(mut arcore: ArCore) -> [f32; 16] {
+    log::i("arcore::c::get_proj_matrix");
+    arcore.get_proj_matrix()
 }
 
 // ArAnchor Color
@@ -71,16 +85,17 @@ pub struct ArCore {
     height_: i32,
     display_rotation_: i32,
 
-    background_texture_id: gl::types::GLuint,
+    background_texture_id: glesv2::GLuint,
 
     renderer_background_: Option<BackgroundRenderer>,
-    renderer_point_cloud_: Option<PointCloudRenderer>,
     // renderer_plane_: Option<PlaneRenderer>,
+    // renderer_point_cloud_: Option<PointCloudRenderer>,
 
     plane_obj_map_: HashMap<i32, ColoredAnchor>,
     point_obj_map_: HashMap<i32, ColoredAnchor>,
     image_obj_map_: HashMap<i32, ColoredAnchor>,
     faces_obj_map_: HashMap<i32, ColoredAnchor>,
+
     number_to_render: usize,
 
     view_mat4x4: [f32; 16],
@@ -90,53 +105,52 @@ pub struct ArCore {
 impl ArCore {
     pub fn new(env: *mut JNIEnv, context: jobject) -> ArCore {
         log::i("arcore::lib::new");
-
         unsafe {
-
-            // Create ArSession
-            let mut out_session_pointer: *mut ArSession = ::std::ptr::null_mut();
-            let mut ar_status_create: ArStatus = ArSession_create(env as *mut ::std::os::raw::c_void, context as *mut ::std::os::raw::c_void, &mut out_session_pointer);
-            if ar_status_create != 0 {
-                log::e(&format!("arcore::lib::new ArSession_create error, ar_status_create = {}", ar_status_create));
-            }
-
-            // Create ArConfig
-            let mut out_config: *mut ArConfig = ::std::ptr::null_mut();
-            ArConfig_create(out_session_pointer as *const ArSession, &mut out_config);
-
-            // Check ArSession_checkSupported
-            let mut ar_status_check: ArStatus = ArSession_checkSupported(out_session_pointer as *const ArSession, out_config);
-            if ar_status_check != 0 {
-                log::e(&format!("arcore::lib::new ArSession_checkSupported error, ar_status_check = {}", ar_status_check));
-            }
-
-            // Create Augmented Image Database
-            // let mut ar_augmented_image_database: *mut ArAugmentedImageDatabase = ::augmented_image::init_augmented_image_database(out_session_pointer as *const ArSession);
-            // ArConfig_setAugmentedImageDatabase(out_session_pointer as *const ArSession, out_config, ar_augmented_image_database);
-            // ArAugmentedImageDatabase_destroy(ar_augmented_image_database);
-
-            // Check ArSession_configure
-            let mut ar_status_configure: ArStatus = ArSession_configure(out_session_pointer, out_config);
-            if ar_status_configure != 0 {
-                log::e(&format!("arcore::lib::new ArSession_configure error, ar_status_configure = {}", ar_status_configure));
-            }
-            ArConfig_destroy(out_config);
-
-            // Create ArFrame
-            let mut out_frame: *mut ArFrame = ::std::ptr::null_mut();
-            ArFrame_create(out_session_pointer as *const ArSession, &mut out_frame);
-
-            ArSession_setDisplayGeometry(out_session_pointer, 0, 1, 1);
-
-            let mut ar_status_resume: ArStatus = ArSession_resume(out_session_pointer);
-            if ar_status_resume != 0 {
-                log::e(&format!("arcore::lib::new ArSession_resume error, ar_status_resume = {}", ar_status_resume));
-            }
-
+            // // Create ArSession
+            // let mut out_session_pointer: *mut ArSession = ::std::ptr::null_mut();
+            // let mut ar_status_create: ArStatus = ArSession_create(env as *mut ::std::os::raw::c_void, context as *mut ::std::os::raw::c_void, &mut out_session_pointer);
+            // if ar_status_create != 0 {
+            //     log::e(&format!("arcore::lib::new ArSession_create error, ar_status_create = {}", ar_status_create));
+            // }
+            //
+            // // Create ArConfig
+            // let mut out_config: *mut ArConfig = ::std::ptr::null_mut();
+            // ArConfig_create(out_session_pointer as *const ArSession, &mut out_config);
+            //
+            // // Check ArSession_checkSupported
+            // let mut ar_status_check: ArStatus = ArSession_checkSupported(out_session_pointer as *const ArSession, out_config);
+            // if ar_status_check != 0 {
+            //     log::e(&format!("arcore::lib::new ArSession_checkSupported error, ar_status_check = {}", ar_status_check));
+            // }
+            //
+            // // Create Augmented Image Database
+            // // let mut ar_augmented_image_database: *mut ArAugmentedImageDatabase = ::augmented_image::init_augmented_image_database(out_session_pointer as *const ArSession);
+            // // ArConfig_setAugmentedImageDatabase(out_session_pointer as *const ArSession, out_config, ar_augmented_image_database);
+            // // ArAugmentedImageDatabase_destroy(ar_augmented_image_database);
+            //
+            // // Check ArSession_configure
+            // let mut ar_status_configure: ArStatus = ArSession_configure(out_session_pointer, out_config);
+            // if ar_status_configure != 0 {
+            //     log::e(&format!("arcore::lib::new ArSession_configure error, ar_status_configure = {}", ar_status_configure));
+            // }
+            // ArConfig_destroy(out_config);
+            //
+            // // Create ArFrame
+            // let mut out_frame: *mut ArFrame = ::std::ptr::null_mut();
+            // ArFrame_create(out_session_pointer as *const ArSession, &mut out_frame);
+            //
+            // ArSession_setDisplayGeometry(out_session_pointer, 0, 1, 1);
+            //
+            // let mut ar_status_resume: ArStatus = ArSession_resume(out_session_pointer);
+            // if ar_status_resume != 0 {
+            //     log::e(&format!("arcore::lib::new ArSession_resume error, ar_status_resume = {}", ar_status_resume));
+            // }
 
             ArCore {
-                ar_session: out_session_pointer,
-                ar_frame: out_frame,
+                // ar_session: out_session_pointer,
+                // ar_frame: out_frame,
+                ar_session: std::ptr::null_mut(),
+                ar_frame: std::ptr::null_mut(),
 
                 show_plane: false,
                 show_point: false,
@@ -152,7 +166,7 @@ impl ArCore {
 
                 renderer_background_: None,
                 // renderer_plane_: None,
-                renderer_point_cloud_: None,
+                // renderer_point_cloud_: None,
 
                 plane_obj_map_: HashMap::new(),
                 point_obj_map_: HashMap::new(),
@@ -222,10 +236,10 @@ impl ArCore {
         }
     }
 
-    pub fn on_display_changed(&mut self, gl: &gl::Gl, display_rotation: i32, width: i32, height: i32) {
+    pub fn on_display_changed(&mut self, display_rotation: i32, width: i32, height: i32) {
         log::i(&format!("arcore::lib::on_display_changed display_rotation = {}, width = {}, height = {}", display_rotation, width, height));
 
-        self.init_renderers(gl);
+        self.init_renderers();
 
         self.display_rotation_ = display_rotation;
         self.width_ = width;
@@ -243,7 +257,7 @@ impl ArCore {
         self.show_faces = show_faces;
     }
 
-    pub fn on_draw(&mut self, gl: &gl::Gl) {
+    pub fn on_draw(&mut self) {
         log::i("arcore::lib::on_draw");
 
         unsafe {
@@ -268,15 +282,15 @@ impl ArCore {
                 let p = util::get_mat4_from_array(self.proj_mat4x4);
                 let v = util::get_mat4_from_array(self.view_mat4x4);
 
-                self.render_background(gl);
+                self.render_background();
 
-                if self.show_plane {
-                    self.render_planes(gl);
-                }
-
-                if self.show_point {
-                    self.render_point_cloud(gl, p * v);
-                }
+                // if self.show_plane {
+                //     self.render_planes();
+                // }
+                //
+                // if self.show_point {
+                //     self.render_point_cloud(p * v);
+                // }
 
                 // if self.show_image {
                 //     ::augmented_image::track_images(self.ar_session as *const ArSession, self.ar_frame as *const ArFrame, &mut self.image_obj_map_);
@@ -461,25 +475,25 @@ impl ArCore {
     }
 
 
-    fn init_renderers(&mut self, gl: &gl::Gl) {
+    fn init_renderers(&mut self) {
         log::i("arcore::lib::init_renderers");
 
-        let bgr = BackgroundRenderer::new(gl);
+        let bgr = BackgroundRenderer::new();
         self.background_texture_id = bgr.get_texture_id();
         self.renderer_background_ = Some(bgr);
 
-        let plr = PlaneRenderer::new(gl);
+        // let plr = PlaneRenderer::new();
         // self.renderer_plane_ = Some(plr);
 
-        let pcr = PointCloudRenderer::new(gl);
-        self.renderer_point_cloud_ = Some(pcr);
+        // let pcr = PointCloudRenderer::new();
+        // self.renderer_point_cloud_ = Some(pcr);
     }
 
-    fn render_background(&mut self, gl: &gl::Gl) {
-        self.clone().renderer_background_.unwrap().draw(gl, self.ar_session as *const ArSession, self.ar_frame as *const ArFrame);
+    fn render_background(&mut self) {
+        self.clone().renderer_background_.unwrap().draw(self.ar_session as *const ArSession, self.ar_frame as *const ArFrame);
     }
 
-    fn render_point_cloud(&mut self, gl: &gl::Gl, mvp_matrix: ::glm::Mat4) {
+    fn render_point_cloud(&mut self, mvp_matrix: ::glm::Mat4) {
         // Update and render point cloud.
         unsafe {
             let mut ar_point_cloud: *mut ArPointCloud = ::std::ptr::null_mut();
@@ -489,13 +503,13 @@ impl ArCore {
                                           &mut ar_point_cloud);
 
             if point_cloud_status == AR_SUCCESS as i32 {
-                self.clone().renderer_point_cloud_.unwrap().draw(gl, mvp_matrix, self.ar_session, ar_point_cloud);
+                // self.clone().renderer_point_cloud_.unwrap().draw(mvp_matrix, self.ar_session, ar_point_cloud);
                 ArPointCloud_release(ar_point_cloud);
             }
         }
     }
 
-    fn render_planes(&mut self, gl: &gl::Gl) {
+    fn render_planes(&mut self) {
         // Update loop, in onDraw
         unsafe {
 

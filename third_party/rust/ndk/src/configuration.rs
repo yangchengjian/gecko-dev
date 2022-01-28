@@ -185,7 +185,7 @@ impl Configuration {
         }
     }
 
-    /// Returns the layout direction
+    // /// Returns the layout direction
     // pub fn layout_direction(&self) -> LayoutDir {
     //     unsafe {
     //         (ffi::AConfiguration_getLayoutDirection(self.ptr.as_ptr()) as u32)

@@ -63,10 +63,17 @@ struct ArCore {
   float proj_mat4x4[16];
 };
 
-static const GLenum TEXTURE_EXTERNAL_OES = 36197;
-
 extern "C" {
 
 ArCore init_arcore();
+
+void on_display_changed(ArCore arcore,
+                        int32_t display_rotation,
+                        int32_t width,
+                        int32_t height);
+
+void on_draw(ArCore arcore);
+
+float *get_proj_matrix(ArCore arcore);
 
 } // extern "C"

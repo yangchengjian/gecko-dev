@@ -5,57 +5,52 @@ use std::os::raw::c_void;
 
 use jni_sys::JavaVM;
 use jni_sys::JNIEnv;
+use jni_sys::jint;
 use jni_sys::jobject;
-use jni_sys::JNIInvokeInterface_;
-use jni_sys::JNINativeInterface_;
-// use ndk::BitmapFormat::RGBA_8888;
-// use ndk::AndroidBitmapInfo;
-// use ndk::get_info;
-// use ndk::lock_pixels;
-// use ndk::unlock_pixels;
-use ndk_glue::native_activity;
-use ndk_sys::AASSET_MODE_BUFFER;
-use ndk_sys::AAsset;
-use ndk_sys::AAsset_read;
-use ndk_sys::AAssetManager;
-use ndk_sys::AAssetManager_open;
-use ndk_sys::ANativeActivity;
+// use ndk_sys::AASSET_MODE_BUFFER;
+// use ndk_sys::AAsset;
+// use ndk_sys::AAsset_read;
+// use ndk_sys::AAssetManager;
+// use ndk_sys::AAssetManager_open;
+// use ndk_sys::ANativeActivity;
 
 use crate::log;
 
-// #[no_mangle]
-// #[allow(non_snake_case)]
-// unsafe fn JNI_OnLoad(jvm: *mut JavaVM, _reserved: *mut c_void) -> jint {
-//     log::i("arcore::jni_interface::JNI_OnLoad");
-// }
-//
-// #[no_mangle]
-// #[allow(non_snake_case)]
-// unsafe fn JNI_OnUnload(jvm: *mut JavaVM, _reserved: *mut c_void) {
-//     log::i("arcore::jni_interface::JNI_OnUnload");
-//
-// }
+static mut STATIC_JVM: *mut JavaVM = std::ptr::null_mut();
+
+#[no_mangle]
+#[allow(non_snake_case)]
+unsafe fn JNI_OnLoad(jvm: *mut JavaVM, _reserved: *mut c_void) -> jint {
+    log::i("arcore::jni_interface::JNI_OnLoad");
+    STATIC_JVM = jvm;
+    0
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+unsafe fn JNI_OnUnload(jvm: *mut JavaVM, _reserved: *mut c_void) {
+    log::i("arcore::jni_interface::JNI_OnUnload");
+}
 
 /// Init Jni to get Env and jobject
 pub fn init_jni() -> (*mut JNIEnv, jobject) {
     log::d("arcore::jni_interface::init_jni");
 
-    let app = native_activity();
-    let activity: *const ANativeActivity = app.ptr().as_ptr();
+    // Get JNIEnv
+    let mut env: *mut JNIEnv = std::ptr::null_mut();
+    // let get_env = unsafe { (*(*STATIC_JVM)).GetEnv.unwrap() };
+    // unsafe { get_env(STATIC_JVM.clone(), env as *mut *mut c_void, jni_sys::JNI_VERSION_1_8) };
+    // let attach = unsafe { (*(*STATIC_JVM)).AttachCurrentThread.unwrap() };
+    // unsafe { attach(STATIC_JVM, env as *mut *mut c_void, std::ptr::null_mut()) };
+    // log::d(&format!("arcore::jni_interface::init_jni env =  {:?}", &env));
 
-    let vm: *mut JavaVM = unsafe { (*activity).vm };
-    let mut env: *mut JNIEnv = unsafe { (*activity).env };
-    let obj: jobject = unsafe { (*activity).clazz };
 
-    // let jni_invoke_interface: *const JNIInvokeInterface_ = unsafe { (*vm).functions };
-    // let jni_native_interface: *const JNINativeInterface_ = unsafe { (*env).functions };
+    // Get jobject
+    let mut obj: jobject = std::ptr::null_mut();
+    // let new_global_ref = unsafe { (*(*env)).NewGlobalRef.unwrap() };
+    // obj = unsafe { new_global_ref(env, std::ptr::null_mut()) };
 
-    // unsafe { (*jni_invoke_interface).AttachCurrentThread };
-    // attach(vm, &mut env, std::ptr::null_mut());
-
-    log::d(&format!("arcore::jni_interface::init_jni env =  {:?}", &env));
-
-    (env, obj as jobject)
+    (env, obj)
 }
 
 // /// Load image from assets

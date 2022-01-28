@@ -22,12 +22,6 @@ struct BackgroundRenderer {
   bool uvs_initialized_;
 };
 
-struct PointCloudRenderer {
-  GLuint shader_program_;
-  GLuint attribute_vertices_;
-  GLuint uniform_mvp_mat_;
-};
-
 struct ColoredAnchor {
   ArAnchor *anchor;
   float color[4];
@@ -46,7 +40,6 @@ struct ArCore {
   int32_t display_rotation_;
   GLuint background_texture_id;
   Option<BackgroundRenderer> renderer_background_;
-  Option<PointCloudRenderer> renderer_point_cloud_;
   HashMap<int32_t, ColoredAnchor> plane_obj_map_;
   HashMap<int32_t, ColoredAnchor> point_obj_map_;
   HashMap<int32_t, ColoredAnchor> image_obj_map_;
@@ -61,5 +54,11 @@ static const GLenum TEXTURE_EXTERNAL_OES = 36197;
 extern "C" {
 
 ArCore init_arcore();
+
+void on_display_changed(ArCore arcore, int32_t display_rotation, int32_t width, int32_t height);
+
+void on_draw(ArCore arcore);
+
+float (get_proj_matrix(ArCore arcore))[16];
 
 } // extern "C"

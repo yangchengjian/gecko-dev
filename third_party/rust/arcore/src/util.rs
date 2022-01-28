@@ -2,39 +2,38 @@ use std::env;
 use std::fs::File;
 use std::io::Read;
 
+use opengles::glesv2;
 use rgb::*;
 use sparkle::gl::*;
 
 use crate::log;
 
-pub fn load_shader(gl: &Gl, shader_type: GLenum, shader_source: &[u8]) -> GLuint {
+pub fn load_shader(shader_type: GLenum, shader_source: &[u8]) -> GLuint {
     unsafe {
-        let mut shader = gl.create_shader(shader_type);
+        let mut shader = glesv2::create_shader(shader_type);
 
         log::d(&format!("arcore::util::load_shader : shader = {}", shader));
 
         if shader == 0 {
             return shader;
         }
-        gl.shader_source(shader, &[shader_source]);
-        gl.compile_shader(shader);
+        glesv2::shader_source(shader, shader_source);
+        glesv2::compile_shader(shader);
 
-        let mut compiled = [0];
-        gl.get_shader_iv(shader, COMPILE_STATUS, &mut compiled);
+        let mut compiled = 0;
+        compiled = glesv2::get_shaderiv(shader, glesv2::GL_COMPILE_STATUS);
+        log::d(&format!("arcore::util::load_shader : compiled = {}", compiled));
 
-        log::d(&format!("arcore::util::load_shader : compiled = {}", compiled[0]));
+        if compiled == 0 {
+            let mut info_len = 0;
+            info_len = glesv2::get_shaderiv(shader, glesv2::GL_INFO_LOG_LENGTH);
+            log::d(&format!("arcore::util::load_shader : info_len = {}", info_len));
 
-        if compiled[0] == 0 {
-            let mut info_len = [0];
-            gl.get_shader_iv(shader, INFO_LOG_LENGTH, &mut info_len);
-
-            log::d(&format!("arcore::util::load_shader : info_len = {}", info_len[0]));
-
-            if info_len[0] == 0 {
+            if info_len == 0 {
                 return shader;
             }
 
-            gl.delete_shader(shader);
+            glesv2::delete_shader(shader);
             shader = 0;
         }
 
@@ -42,9 +41,9 @@ pub fn load_shader(gl: &Gl, shader_type: GLenum, shader_source: &[u8]) -> GLuint
     }
 }
 
-pub fn create_program(gl: &Gl, vertex_source: &[u8], fragment_source: &[u8]) -> GLuint {
+pub fn create_program(vertex_source: &[u8], fragment_source: &[u8]) -> GLuint {
     unsafe {
-        let vertex_shader = load_shader(gl, VERTEX_SHADER, vertex_source);
+        let vertex_shader = load_shader(glesv2::GL_VERTEX_SHADER, vertex_source);
 
         log::d(&format!("arcore::util::create_program : vertex_shader = {}", vertex_shader));
 
@@ -52,7 +51,7 @@ pub fn create_program(gl: &Gl, vertex_source: &[u8], fragment_source: &[u8]) -> 
             return 0;
         }
 
-        let fragment_shader = load_shader(gl, FRAGMENT_SHADER, fragment_source);
+        let fragment_shader = load_shader(glesv2::GL_FRAGMENT_SHADER, fragment_source);
 
         log::d(&format!("arcore::util::create_program : fragment_shader = {}", fragment_shader));
 
@@ -60,22 +59,21 @@ pub fn create_program(gl: &Gl, vertex_source: &[u8], fragment_source: &[u8]) -> 
             return 0;
         }
 
-        let mut program = gl.create_program();
+        let mut program = glesv2::create_program();
 
         log::d(&format!("arcore::util::create_program : program = {}", program));
 
         if program != 0 {
-            gl.attach_shader(program, vertex_shader);
-            gl.attach_shader(program, fragment_shader);
-            gl.link_program(program);
+            glesv2::attach_shader(program, vertex_shader);
+            glesv2::attach_shader(program, fragment_shader);
+            glesv2::link_program(program);
 
-            let mut link_status = [0];
-            gl.get_program_iv(program, LINK_STATUS, &mut link_status);
+            let mut link_status = 0;
+            link_status = glesv2::get_programiv(program, glesv2::GL_LINK_STATUS);
+            log::d(&format!("arcore::util::create_program : link_status = {}", link_status));
 
-            log::d(&format!("arcore::util::create_program : link_status = {}", link_status[0]));
-
-            if link_status[0] == 0 {
-                gl.delete_program(program);
+            if link_status == 0 {
+                glesv2::delete_program(program);
                 program = 0;
             }
         }
