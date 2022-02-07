@@ -46,6 +46,8 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 
+#include "arcore_bindings.h"
+
 #include <list>
 
 class nsIDocShell;
@@ -249,6 +251,9 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
     UNMASKED_VENDOR_WEBGL = 0x9245,
     UNMASKED_RENDERER_WEBGL = 0x9246
   };
+
+ public:
+  ArCore arcore;
 
  private:
   class LruPosition final {
@@ -557,6 +562,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   void DepthRange(GLclampf zNear, GLclampf zFar);
   void DetachShader(WebGLProgram& prog, const WebGLShader& shader);
   void DrawBuffers(const std::vector<GLenum>& buffers);
+  void DrawBackground();
   void Flush();
   void Finish();
 

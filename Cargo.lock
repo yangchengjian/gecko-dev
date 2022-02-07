@@ -157,7 +157,6 @@ dependencies = [
  "opengles",
  "rgb",
  "serde",
- "sparkle",
 ]
 
 [[package]]
@@ -2237,17 +2236,6 @@ dependencies = [
 
 [[package]]
 name = "gl_generator"
-version = "0.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca98bbde17256e02d17336a6bdb5a50f7d0ccacee502e191d3e3d0ec2f96f84a"
-dependencies = [
- "khronos_api",
- "log 0.4.14",
- "xml-rs",
-]
-
-[[package]]
-name = "gl_generator"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a95dfc23a2b4a9a2f5ab41d194f8bfda3cabec42af4e39f08c339eb2a0c124d"
@@ -2263,7 +2251,7 @@ version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "992c40589d382354958af7c60910026ed4cc3c58751355db21a4c2fbef15727a"
 dependencies = [
- "gl_generator 0.14.0",
+ "gl_generator",
 ]
 
 [[package]]
@@ -5374,15 +5362,6 @@ dependencies = [
  "cfg-if 1.0.0",
  "libc 0.2.109",
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "sparkle"
-version = "0.1.25"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7184285ed8ddbf106cda8fef17f584207fc64a03125e3694c324b19b708825fa"
-dependencies = [
- "gl_generator 0.13.1",
 ]
 
 [[package]]

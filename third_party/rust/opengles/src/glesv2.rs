@@ -951,7 +951,7 @@ pub fn get_attrib_location(program: GLuint, name: &str) -> GLint {
     unsafe {
         let c_str = CString::new(name).unwrap();
 
-        ffi::glGetAttribLocation(program, c_str.as_ptr() as *const i8)
+        ffi::glGetAttribLocation(program, c_str.as_ptr() as *const u8)
     }
 }
 
@@ -1028,7 +1028,7 @@ pub fn get_program_info_log(program: GLuint, max_length: GLsizei) -> Option<Stri
         let mut log = String::with_capacity(max_length as usize);
 
         ffi::glGetProgramInfoLog(program, max_length, &mut length,
-                                 log.as_mut_vec().as_mut_ptr() as *mut i8);
+                                 log.as_mut_vec().as_mut_ptr() as *mut u8);
 
         if length > 0 {
             log.as_mut_vec().set_len(length as usize);
@@ -1067,7 +1067,7 @@ pub fn get_shader_info_log(shader: GLuint, max_length: GLsizei) -> Option<String
         let mut log = String::with_capacity(max_length as usize);
 
         ffi::glGetShaderInfoLog(shader, max_length, &mut length,
-                                log.as_mut_vec().as_mut_ptr() as *mut i8);
+                                log.as_mut_vec().as_mut_ptr() as *mut u8);
 
         if length > 0 {
             log.as_mut_vec().set_len(length as usize);
@@ -1172,7 +1172,7 @@ pub fn get_uniform_location(program: GLuint, name: &str) -> GLint {
     unsafe {
         let c_str = CString::new(name).unwrap();
 
-        ffi::glGetUniformLocation(program, c_str.as_ptr() as *const i8)
+        ffi::glGetUniformLocation(program, c_str.as_ptr() as *const u8)
     }
 }
 

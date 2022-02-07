@@ -1,79 +1,59 @@
+#ifndef ARCORE_BINDINGS_H_
+#define ARCORE_BINDINGS_H_
+
 #include <cstdarg>
 #include <cstdint>
 #include <cstdlib>
 #include <ostream>
-#include <new>
+#include <type_traits>
 
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
+#include "arcore_c_api.h"
+#include "GLContext.h"
 #include "glm/glm.hpp"
-#include "arcore/arcore_c_api.h"
 
-static const int32_t K_NUM_VERTICES = 4;
-
-template<typename K = void, typename V = void, typename Hasher = void>
-struct HashMap;
-
-struct BackgroundRenderer {
-  GLuint shader_program_;
-  GLuint texture_id_;
-  GLuint attribute_vertices_;
-  GLuint attribute_uvs_;
-  GLuint uniform_texture_;
-  float transformed_uvs_[8];
-  bool uvs_initialized_;
-};
-
-struct PointCloudRenderer {
-  GLuint shader_program_;
-  GLuint attribute_vertices_;
-  GLuint uniform_mvp_mat_;
-};
-
-//struct PlaneRenderer {
-//  Vec<Vec3> vertices_;
-//  Vec<GLushort> triangles_;
-//  float model_mat_[16];
-//  Vec3 normal_vec_;
-//  GLuint texture_id_;
-//  GLuint shader_program_;
-//  GLuint attri_vertices_;
-//  GLuint uniform_mvp_mat_;
-//  GLuint uniform_texture_;
-//  GLuint uniform_model_mat_;
-//  GLuint uniform_normal_vec_;
-//  GLuint uniform_color_;
-//};
-
+/// ArCore
 struct ArCore {
-  ArSession *ar_session;
-  ArFrame *ar_frame;
-  bool show_plane;
-  bool show_point;
-  bool show_image;
-  bool show_faces;
-  int32_t shop_rate;
   int32_t width_;
   int32_t height_;
-  int32_t display_rotation_;
-  GLuint background_texture_id;
-  BackgroundRenderer renderer_background_;
-  PointCloudRenderer renderer_point_cloud_;
-//  PlaneRenderer renderer_plane_;
-  uintptr_t number_to_render;
+  int32_t rotation_;
+
+  ArSession *ar_session;
+  ArFrame *ar_frame;
+
+  GLuint camera_program_;
+  GLuint camera_texture_id_;
+  GLuint camera_position_attrib_;
+  GLuint camera_tex_coord_attrib_;
+  GLuint camera_texture_uniform_;
+  float uvs_transformed_[8];
+  bool uvs_initialized_;
+
   float view_mat4x4[16];
   float proj_mat4x4[16];
 };
 
 extern "C" {
 
-ArCore init_arcore();
+/// initial ArCore
+void init_arcore(ArCore *arcore, void *env);
 
-void on_display_changed(ArCore arcore,
-                        int32_t display_rotation,
-                        int32_t width,
-                        int32_t height);
+/// on surface created
+void on_surface_created(ArCore *arcore);
 
-void on_draw(ArCore arcore);
+/// set display rotation, width, height
+void on_display_changed(ArCore *arcore, int32_t display_rotation, int32_t width, int32_t height);
 
-float *get_proj_matrix(ArCore arcore);
+/// draw background and set relevant matrix
+void on_draw_frame(ArCore *arcore);
+
+
+void after_init_arcore(ArCore *arcore, mozilla::gl::GLContext* gl);
+
+void after_draw_frame(ArCore *arcore, mozilla::gl::GLContext* gl);
 
 } // extern "C"
+
+#endif

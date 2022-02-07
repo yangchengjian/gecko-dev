@@ -7,7 +7,7 @@ use std::path::PathBuf;
 fn main() {
     println!("cargo:rustc-link-lib=dylib=arcore_sdk_c");
     println!("cargo:rustc-link-lib=dylib=jnigraphics");
-    println!("cargo:rustc-link-search=native=/Volumes/t/sft/arcore/arcore-jni/jni/armeabi-v7a");
+    println!("cargo:rustc-link-search=native=/Volumes/t/sft/arcore/arcore-jni/jni/arm64-v8a");
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for

@@ -1307,6 +1307,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   void DepthRange(GLclampf zNear, GLclampf zFar);
 
+  void DrawBackground();
+
   void Flush(bool flushGl = true);
 
   void Finish();

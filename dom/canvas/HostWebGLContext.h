@@ -327,6 +327,10 @@ class HostWebGLContext final : public SupportsWeakPtr {
     mContext->DetachShader(*pProg, *pShader);
   }
 
+  void DrawBackground() const {
+    mContext->DrawBackground();
+  }
+
   void Flush() const { mContext->Flush(); }
 
   void Finish() const { mContext->Finish(); }

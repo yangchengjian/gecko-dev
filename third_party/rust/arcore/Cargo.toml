@@ -24,6 +24,5 @@ ndk-sys = "0.3.0"
 opengles = "0.1.2"
 rgb = "0.8"
 serde = "1.0"
-sparkle = "0.1.16"
 
 

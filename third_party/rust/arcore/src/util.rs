@@ -4,15 +4,13 @@ use std::io::Read;
 
 use opengles::glesv2;
 use rgb::*;
-use sparkle::gl::*;
-
 use crate::log;
 
-pub fn load_shader(shader_type: GLenum, shader_source: &[u8]) -> GLuint {
+pub fn load_shader(shader_type: glesv2::GLenum, shader_source: &[u8]) -> glesv2::GLuint {
     unsafe {
         let mut shader = glesv2::create_shader(shader_type);
 
-        log::d(&format!("arcore::util::load_shader : shader = {}", shader));
+        log::d(&format!("arcore::util::load_shader : shader = {}\n", shader));
 
         if shader == 0 {
             return shader;
@@ -22,12 +20,12 @@ pub fn load_shader(shader_type: GLenum, shader_source: &[u8]) -> GLuint {
 
         let mut compiled = 0;
         compiled = glesv2::get_shaderiv(shader, glesv2::GL_COMPILE_STATUS);
-        log::d(&format!("arcore::util::load_shader : compiled = {}", compiled));
+        log::d(&format!("arcore::util::load_shader : compiled = {}\n", compiled));
 
         if compiled == 0 {
             let mut info_len = 0;
             info_len = glesv2::get_shaderiv(shader, glesv2::GL_INFO_LOG_LENGTH);
-            log::d(&format!("arcore::util::load_shader : info_len = {}", info_len));
+            log::d(&format!("arcore::util::load_shader : info_len = {}\n", info_len));
 
             if info_len == 0 {
                 return shader;
@@ -41,11 +39,11 @@ pub fn load_shader(shader_type: GLenum, shader_source: &[u8]) -> GLuint {
     }
 }
 
-pub fn create_program(vertex_source: &[u8], fragment_source: &[u8]) -> GLuint {
+pub fn create_program(vertex_source: &[u8], fragment_source: &[u8]) -> glesv2::GLuint {
     unsafe {
         let vertex_shader = load_shader(glesv2::GL_VERTEX_SHADER, vertex_source);
 
-        log::d(&format!("arcore::util::create_program : vertex_shader = {}", vertex_shader));
+        log::d(&format!("arcore::util::create_program : vertex_shader = {}\n", vertex_shader));
 
         if vertex_shader == 0 {
             return 0;
@@ -53,7 +51,7 @@ pub fn create_program(vertex_source: &[u8], fragment_source: &[u8]) -> GLuint {
 
         let fragment_shader = load_shader(glesv2::GL_FRAGMENT_SHADER, fragment_source);
 
-        log::d(&format!("arcore::util::create_program : fragment_shader = {}", fragment_shader));
+        log::d(&format!("arcore::util::create_program : fragment_shader = {}\n", fragment_shader));
 
         if fragment_shader == 0 {
             return 0;
@@ -61,7 +59,7 @@ pub fn create_program(vertex_source: &[u8], fragment_source: &[u8]) -> GLuint {
 
         let mut program = glesv2::create_program();
 
-        log::d(&format!("arcore::util::create_program : program = {}", program));
+        log::d(&format!("arcore::util::create_program : program = {}\n", program));
 
         if program != 0 {
             glesv2::attach_shader(program, vertex_shader);
@@ -70,7 +68,7 @@ pub fn create_program(vertex_source: &[u8], fragment_source: &[u8]) -> GLuint {
 
             let mut link_status = 0;
             link_status = glesv2::get_programiv(program, glesv2::GL_LINK_STATUS);
-            log::d(&format!("arcore::util::create_program : link_status = {}", link_status));
+            log::d(&format!("arcore::util::create_program : link_status = {}\n", link_status));
 
             if link_status == 0 {
                 glesv2::delete_program(program);

@@ -39,8 +39,6 @@
 #include "WebGLChild.h"
 #include "WebGLValidateStrings.h"
 
-#include "arcore/arcore_bindings.h"
-
 namespace mozilla {
 
 namespace webgl {
@@ -619,8 +617,6 @@ static inline bool StartsWith(const std::string& haystack,
 bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
   const auto pNotLost = std::make_shared<webgl::NotLostData>(*this);
   auto& notLost = *pNotLost;
-
-  ArCore arcore = init_arcore();
 
   auto res = [&]() -> Result<Ok, std::string> {
     auto options = *mInitialOptions;
@@ -2765,6 +2761,8 @@ void ClientWebGLContext::DepthRange(GLclampf zNear, GLclampf zFar) {
 
   Run<RPROC(DepthRange)>(zNear, zFar);
 }
+
+void ClientWebGLContext::DrawBackground() { Run<RPROC(DrawBackground)>(); }
 
 void ClientWebGLContext::Flush(const bool flushGl) {
   const FuncScope funcScope(*this, "flush");

@@ -339,6 +339,13 @@ void WebGLContext::DepthRange(GLfloat zNear, GLfloat zFar) {
   gl->fDepthRange(zNear, zFar);
 }
 
+void WebGLContext::DrawBackground() {
+  const FuncScope funcScope(*this, "drawBackground");
+  if (IsContextLost()) return;
+
+  on_draw_frame(&arcore);
+}
+
 // -
 
 void WebGLContext::FramebufferAttach(const GLenum target,
@@ -1469,6 +1476,8 @@ void WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height) {
   height = std::min(height, static_cast<GLsizei>(limits.maxViewportDim));
 
   gl->fViewport(x, y, width, height);
+
+  on_display_changed(&arcore, 0, width, height);
 
   mViewportX = x;
   mViewportY = y;

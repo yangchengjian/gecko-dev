@@ -6,9 +6,6 @@ mod augmented_face;
 mod augmented_image;
 mod jni_interface;
 pub mod log;
-mod renderer_background;
-// mod renderer_plane;
-// mod renderer_point_cloud;
 mod util;
 
 #[cfg(target_os = "android")]
@@ -19,48 +16,104 @@ extern crate nalgebra_glm;
 extern crate ndk;
 extern crate ndk_sys;
 extern crate rgb;
-extern crate sparkle;
 
 use std::collections::HashMap;
-
 use jni_sys::JavaVM;
 use jni_sys::JNIEnv;
 use jni_sys::jobject;
 use opengles::glesv2;
-
 use crate::ffi_arcore::*;
-use crate::renderer_background::BackgroundRenderer;
-// use crate::renderer_plane::PlaneRenderer;
-// use crate::renderer_point_cloud::PointCloudRenderer;
+
+pub const GL_TEXTURE_EXTERNAL_OES: glesv2::GLenum = 0x8D65;
+pub const K_NUM_VERTICES: i32 = 4;
+
+// UVs of the quad vertices (S, T)
+const K_UVS: [f32; 8] = [
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+];
+
+const K_VERS: [f32; 8] = [
+    -1.0, -1.0,
+    1.0, -1.0,
+    -1.0, 1.0,
+    1.0, 1.0,
+];
+
+const VS_SRC_CAMERA: &'static [u8] = b"
+attribute vec4 a_Position;
+attribute vec2 a_TexCoord;
+
+varying vec2 v_TexCoord;
+
+void main() {
+   gl_Position = a_Position;
+   v_TexCoord = a_TexCoord;
+}
+\0";
+
+const FS_SRC_CAMERA: &'static [u8] = b"
+#extension GL_OES_EGL_image_external : require
+
+precision mediump float;
+varying vec2 v_TexCoord;
+uniform samplerExternalOES sTexture;
 
 
-// initial ArCore
+void main() {
+    gl_FragColor = texture2D(sTexture, v_TexCoord);
+}
+\0";
+
+/// initial ArCore
 #[no_mangle]
-pub unsafe extern "C" fn init_arcore() -> ArCore {
-    log::i("arcore::c::init_arcore");
-    let (env, context) = jni_interface::init_jni();
-    ArCore::new(env, context)
+pub unsafe extern "C" fn init_arcore(arcore: *mut ArCore, env: *mut JNIEnv) {
+    log::i("arcore::c::init_arcore\n");
+
+    let (env, context) = jni_interface::init_jni(env);
+    (*arcore) = ArCore::new(env, context)
 }
 
+/// on surface created
 #[no_mangle]
-pub unsafe extern "C" fn on_display_changed(mut arcore: ArCore, display_rotation: i32, width: i32, height: i32) {
-    log::i("arcore::c::on_display_changed");
-    arcore.on_display_changed(display_rotation, width, height)
+pub unsafe extern "C" fn on_surface_created(arcore: *mut ArCore) {
+    log::i("arcore::c::on_surface_created\n");
+
+    log::d(&format!("arcore::c::on_surface_created arcore before = {:?}\n", &*arcore));
+    (*arcore).on_surface_created();
+    log::d(&format!("arcore::c::on_surface_created arcore after = {:?}\n", &*arcore));
 }
 
+/// set display rotation, width, height
 #[no_mangle]
-pub unsafe extern "C" fn on_draw(mut arcore: ArCore) {
-    log::i("arcore::c::on_draw");
-    arcore.on_draw()
+pub unsafe extern "C" fn on_display_changed(arcore: *mut ArCore, rotation: i32, width: i32, height: i32) {
+    log::i("arcore::c::on_display_changed\n");
+
+    log::d(&format!("arcore::c::on_display_changed arcore before = {:?}\n", &*arcore));
+    (*arcore).on_display_changed(rotation, width, height);
+    log::d(&format!("arcore::c::on_display_changed arcore after = {:?}\n", &*arcore));
 }
 
+/// draw background and set relevant matrix
 #[no_mangle]
-pub unsafe extern "C" fn get_proj_matrix(mut arcore: ArCore) -> [f32; 16] {
-    log::i("arcore::c::get_proj_matrix");
+pub unsafe extern "C" fn on_draw_frame(arcore: *mut ArCore) {
+    log::i("arcore::c::on_draw_frame\n");
+
+    log::d(&format!("arcore::c::on_draw_frame arcore before = {:?}\n", &*arcore));
+    (*arcore).on_draw_frame();
+    log::d(&format!("arcore::c::on_draw_frame arcore after = {:?}\n", &*arcore));
+}
+
+/// get project matrix
+#[no_mangle]
+pub unsafe extern "C" fn get_proj_matrix(arcore: ArCore) -> [f32; 16] {
+    log::i("arcore::c::get_proj_matrix\n");
     arcore.get_proj_matrix()
 }
 
-// ArAnchor Color
+/// ArAnchor Color
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub struct ColoredAnchor {
@@ -68,111 +121,144 @@ pub struct ColoredAnchor {
     color: [f32; 4],
 }
 
-// ArCore
+/// ArCore
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ArCore {
+    // Surface -------------------------------------------------
+    width_: i32,
+    height_: i32,
+    rotation_: i32,
+
+    // ArCore -------------------------------------------------
     ar_session: *mut ArSession,
     ar_frame: *mut ArFrame,
 
-    show_plane: bool,
-    show_point: bool,
-    show_image: bool,
-    show_faces: bool,
-    shop_rate: i32,
+    // Background ---------------------------------------------
+    camera_program_: glesv2::GLuint,
+    camera_position_attrib_: glesv2::GLuint,
+    camera_tex_coord_attrib_: glesv2::GLuint,
+    camera_texture_uniform_: glesv2::GLuint,
+    camera_texture_id_: glesv2::GLuint,
 
-    width_: i32,
-    height_: i32,
-    display_rotation_: i32,
+    // depth_program_: glesv2::GLuint,
+    // depth_texture_id_: glesv2::GLuint,
+    // depth_texture_uniform_: glesv2::GLuint,
+    // depth_position_attrib_: glesv2::GLuint,
+    // depth_tex_coord_attrib_: glesv2::GLuint,
 
-    background_texture_id: glesv2::GLuint,
+    uvs_transformed_: [f32; 8],
+    uvs_initialized_: bool,
 
-    renderer_background_: Option<BackgroundRenderer>,
-    // renderer_plane_: Option<PlaneRenderer>,
-    // renderer_point_cloud_: Option<PointCloudRenderer>,
+    // Object -------------------------------------------------
+    // show_plane: bool,
+    // show_point: bool,
+    // show_image: bool,
+    // show_faces: bool,
+    // shop_rate: i32,
 
-    plane_obj_map_: HashMap<i32, ColoredAnchor>,
-    point_obj_map_: HashMap<i32, ColoredAnchor>,
-    image_obj_map_: HashMap<i32, ColoredAnchor>,
-    faces_obj_map_: HashMap<i32, ColoredAnchor>,
+    // plane_obj_map_: HashMap<i32, ColoredAnchor>,
+    // point_obj_map_: HashMap<i32, ColoredAnchor>,
+    // image_obj_map_: HashMap<i32, ColoredAnchor>,
+    // faces_obj_map_: HashMap<i32, ColoredAnchor>,
 
-    number_to_render: usize,
+    // number_to_render: usize,
 
+    // Matrix -------------------------------------------------
     view_mat4x4: [f32; 16],
     proj_mat4x4: [f32; 16],
 }
 
 impl ArCore {
+
     pub fn new(env: *mut JNIEnv, context: jobject) -> ArCore {
-        log::i("arcore::lib::new");
+        log::i("arcore::lib::new\n");
         unsafe {
-            // // Create ArSession
-            // let mut out_session_pointer: *mut ArSession = ::std::ptr::null_mut();
-            // let mut ar_status_create: ArStatus = ArSession_create(env as *mut ::std::os::raw::c_void, context as *mut ::std::os::raw::c_void, &mut out_session_pointer);
-            // if ar_status_create != 0 {
-            //     log::e(&format!("arcore::lib::new ArSession_create error, ar_status_create = {}", ar_status_create));
-            // }
+            // Create ArSession
+            let mut out_session_pointer: *mut ArSession = ::std::ptr::null_mut();
+            let mut ar_status_create: ArStatus = ArSession_create(env as *mut ::std::os::raw::c_void, context as *mut ::std::os::raw::c_void, &mut out_session_pointer);
+            if ar_status_create != 0 {
+                log::e(&format!("arcore::lib::new ArSession_create error, ar_status_create = {}\n", ar_status_create));
+            }
+
+            // Create ArConfig
+            let mut out_config: *mut ArConfig = ::std::ptr::null_mut();
+            ArConfig_create(out_session_pointer as *const ArSession, &mut out_config);
+
+            // // Set Depth Mode
+            // ArConfig_setDepthMode(
+            //     out_session_pointer as *const ArSession,
+            //     out_config,
+            //     AR_DEPTH_MODE_DISABLED as i32
+            // );
             //
-            // // Create ArConfig
-            // let mut out_config: *mut ArConfig = ::std::ptr::null_mut();
-            // ArConfig_create(out_session_pointer as *const ArSession, &mut out_config);
-            //
-            // // Check ArSession_checkSupported
-            // let mut ar_status_check: ArStatus = ArSession_checkSupported(out_session_pointer as *const ArSession, out_config);
-            // if ar_status_check != 0 {
-            //     log::e(&format!("arcore::lib::new ArSession_checkSupported error, ar_status_check = {}", ar_status_check));
-            // }
-            //
-            // // Create Augmented Image Database
-            // // let mut ar_augmented_image_database: *mut ArAugmentedImageDatabase = ::augmented_image::init_augmented_image_database(out_session_pointer as *const ArSession);
-            // // ArConfig_setAugmentedImageDatabase(out_session_pointer as *const ArSession, out_config, ar_augmented_image_database);
-            // // ArAugmentedImageDatabase_destroy(ar_augmented_image_database);
-            //
-            // // Check ArSession_configure
-            // let mut ar_status_configure: ArStatus = ArSession_configure(out_session_pointer, out_config);
-            // if ar_status_configure != 0 {
-            //     log::e(&format!("arcore::lib::new ArSession_configure error, ar_status_configure = {}", ar_status_configure));
-            // }
-            // ArConfig_destroy(out_config);
-            //
-            // // Create ArFrame
-            // let mut out_frame: *mut ArFrame = ::std::ptr::null_mut();
-            // ArFrame_create(out_session_pointer as *const ArSession, &mut out_frame);
-            //
-            // ArSession_setDisplayGeometry(out_session_pointer, 0, 1, 1);
-            //
-            // let mut ar_status_resume: ArStatus = ArSession_resume(out_session_pointer);
-            // if ar_status_resume != 0 {
-            //     log::e(&format!("arcore::lib::new ArSession_resume error, ar_status_resume = {}", ar_status_resume));
-            // }
+            // // Set Instant Placement Mode
+            // ArConfig_setInstantPlacementMode(
+            //     out_session_pointer as *const ArSession,
+            //     out_config,
+            //     AR_INSTANT_PLACEMENT_MODE_DISABLED as i32
+            // );
+
+            // Create Augmented Image Database
+            // let mut ar_augmented_image_database: *mut ArAugmentedImageDatabase = ::augmented_image::init_augmented_image_database(out_session_pointer as *const ArSession);
+            // ArConfig_setAugmentedImageDatabase(out_session_pointer as *const ArSession, out_config, ar_augmented_image_database);
+            // ArAugmentedImageDatabase_destroy(ar_augmented_image_database);
+
+            // Check ArSession configure
+            let mut ar_status_configure: ArStatus = ArSession_configure(out_session_pointer, out_config);
+            if ar_status_configure != 0 {
+                log::e(&format!("arcore::lib::new ArSession_configure error, ar_status_configure = {}\n", ar_status_configure));
+            }
+            ArConfig_destroy(out_config);
+
+            // Create ArFrame
+            let mut out_frame: *mut ArFrame = ::std::ptr::null_mut();
+            ArFrame_create(out_session_pointer as *const ArSession, &mut out_frame);
+
+            // Set Display Geometry
+            ArSession_setDisplayGeometry(out_session_pointer, 0, 1, 1);
+
+            // ArSession resume
+            let mut ar_status_resume: ArStatus = ArSession_resume(out_session_pointer);
+            if ar_status_resume != 0 {
+                log::e(&format!("arcore::lib::new ArSession_resume error, ar_status_resume = {}\n", ar_status_resume));
+            }
 
             ArCore {
-                // ar_session: out_session_pointer,
-                // ar_frame: out_frame,
-                ar_session: std::ptr::null_mut(),
-                ar_frame: std::ptr::null_mut(),
-
-                show_plane: false,
-                show_point: false,
-                show_image: false,
-                show_faces: false,
-                shop_rate: 0,
 
                 width_: 1,
                 height_: 1,
-                display_rotation_: 0,
+                rotation_: 0,
 
-                background_texture_id: 0,
+                ar_session: out_session_pointer,
+                ar_frame: out_frame,
 
-                renderer_background_: None,
-                // renderer_plane_: None,
-                // renderer_point_cloud_: None,
+                camera_program_: 0,
+                camera_position_attrib_: 0,
+                camera_tex_coord_attrib_: 0,
+                camera_texture_uniform_: 0,
+                camera_texture_id_: 0,
 
-                plane_obj_map_: HashMap::new(),
-                point_obj_map_: HashMap::new(),
-                image_obj_map_: HashMap::new(),
-                faces_obj_map_: HashMap::new(),
-                number_to_render: 0,
+                // depth_program_: depth_program,
+                // depth_texture_id_: depth_texture_id,
+                // depth_texture_uniform_: depth_texture_uniform,
+                // depth_position_attrib_: depth_position_attrib,
+                // depth_tex_coord_attrib_: depth_tex_coord_attrib,
+
+                uvs_transformed_: [0.0; 8],
+                uvs_initialized_: false,
+
+                // show_plane: false,
+                // show_point: false,
+                // show_image: false,
+                // show_faces: false,
+                // shop_rate: 0,
+
+                // plane_obj_map_: HashMap::new(),
+                // point_obj_map_: HashMap::new(),
+                // image_obj_map_: HashMap::new(),
+                // faces_obj_map_: HashMap::new(),
+                // number_to_render: 0,
 
                 view_mat4x4: [0.0; 16],
                 proj_mat4x4: [0.0; 16],
@@ -191,27 +277,27 @@ impl ArCore {
     }
 
     // 1: plane, 2: point, 3: images, 4: faces
-    pub fn get_mode_matrix(&self, track_type: i32, index: i32) -> [f32; 16] {
+    pub fn get_mode_matrix(&self, track_type: i32, index: i32) {
         log::i(&format!("arcore::lib::get_mode_matrix track_type = {}, index = {}", track_type, index));
-        match track_type {
-            1 => get_matrix_by_anchor_and_index(self.ar_session, &self.plane_obj_map_, index),
-            2 => get_matrix_by_anchor_and_index(self.ar_session, &self.point_obj_map_, index),
-            3 => get_matrix_by_anchor_and_index(self.ar_session, &self.image_obj_map_, index),
-            4 => get_matrix_by_anchor_and_index(self.ar_session, &self.faces_obj_map_, index),
-            _ => get_matrix_by_anchor_and_index(self.ar_session, &self.plane_obj_map_, index),
-        }
+        // match track_type {
+        //     1 => get_matrix_by_anchor_and_index(self.ar_session, &self.plane_obj_map_, index),
+        //     2 => get_matrix_by_anchor_and_index(self.ar_session, &self.point_obj_map_, index),
+        //     3 => get_matrix_by_anchor_and_index(self.ar_session, &self.image_obj_map_, index),
+        //     4 => get_matrix_by_anchor_and_index(self.ar_session, &self.faces_obj_map_, index),
+        //     _ => get_matrix_by_anchor_and_index(self.ar_session, &self.plane_obj_map_, index),
+        // }
     }
 
-    pub fn get_view_mode_matrix(&self, track_type: i32, index: i32) -> [f32; 16] {
+    pub fn get_view_mode_matrix(&self, track_type: i32, index: i32) {
         log::i(&format!("arcore::lib::get_view_mode_matrix track_type = {}, index = {}", track_type, index));
-        let mode_mat4x4 = self.get_mode_matrix(track_type, index);
-        let vm = util::get_mat4_from_array(self.get_view_matrix()) * util::get_mat4_from_array(mode_mat4x4);
-        log::print_matrix("arcore::lib::get_view_mode_matrix", &util::get_array_from_mat4(vm));
-        util::get_array_from_mat4(vm)
+        // let mode_mat4x4 = self.get_mode_matrix(track_type, index);
+        // let vm = util::get_mat4_from_array(self.get_view_matrix()) * util::get_mat4_from_array(mode_mat4x4);
+        // log::print_matrix("arcore::lib::get_view_mode_matrix", &util::get_array_from_mat4(vm));
+        // util::get_array_from_mat4(vm)
     }
 
     pub fn get_light_estimation(&mut self) -> [f32; 4] {
-        log::i("arcore::lib::light_estimation");
+        log::i("arcore::lib::light_estimation\n");
         // Get light estimation value.
         unsafe {
             let mut ar_light_estimate: *mut ArLightEstimate = ::std::ptr::null_mut();
@@ -236,80 +322,70 @@ impl ArCore {
         }
     }
 
-    pub fn on_display_changed(&mut self, display_rotation: i32, width: i32, height: i32) {
-        log::i(&format!("arcore::lib::on_display_changed display_rotation = {}, width = {}, height = {}", display_rotation, width, height));
+    pub fn on_surface_created(&mut self) {
+        log::i("arcore::lib::on_surface_created\n");
 
         self.init_renderers();
+    }
 
-        self.display_rotation_ = display_rotation;
+    pub fn on_display_changed(&mut self, rotation: i32, width: i32, height: i32) {
+        log::i(&format!("arcore::lib::on_display_changed rotation = {}, width = {}, height = {}\n", rotation, width, height));
+
+        self.rotation_ = rotation;
         self.width_ = width;
         self.height_ = height;
         if self.ar_session != ::std::ptr::null_mut() {
-            unsafe { ArSession_setDisplayGeometry(self.ar_session, display_rotation, width, height) };
+            unsafe { ArSession_setDisplayGeometry(self.ar_session, rotation, width, height) };
         }
     }
 
     pub fn on_config_changed(&mut self, show_plane: bool, show_point: bool, show_image: bool, show_faces: bool) {
         log::i(&format!("arcore::lib::on_config_changed show_plane = {}, show_point = {}, show_image = {}, show_faces = {}", show_plane, show_point, show_image, show_faces));
-        self.show_plane = show_plane;
-        self.show_point = show_point;
-        self.show_image = show_image;
-        self.show_faces = show_faces;
+        // self.show_plane = show_plane;
+        // self.show_point = show_point;
+        // self.show_image = show_image;
+        // self.show_faces = show_faces;
     }
 
-    pub fn on_draw(&mut self) {
-        log::i("arcore::lib::on_draw");
+    pub fn on_draw_frame(&mut self) {
+        log::i("arcore::lib::on_draw_frame");
 
         unsafe {
-            ArSession_setCameraTextureName(self.ar_session, self.background_texture_id);
+            // Set Camera texture
+            ArSession_setCameraTextureName(self.ar_session, self.camera_texture_id_);
 
+            // ArSession update
             let mut ar_status_update: ArStatus = ArSession_update(self.ar_session, self.ar_frame);
+            if ar_status_update != 0 {
+                log::e(&format!("arcore::lib::on_draw_frame ArSession_update error, ar_status_update = {}\n", ar_status_update));
+            }
 
+            // Acquire Camera
             let mut out_camera: *mut ArCamera = ::std::ptr::null_mut();
             ArFrame_acquireCamera(self.ar_session as *const ArSession, self.ar_frame as *const ArFrame, &mut out_camera);
 
+            // Update Matrix
+            self.update_proj_view_matrix();
+            // let p = util::get_mat4_from_array(self.proj_mat4x4);
+            // let v = util::get_mat4_from_array(self.view_mat4x4);
+
+            // Camera Tracking State
             let mut camera_tracking_state: ArTrackingState = 0;
             ArCamera_getTrackingState(self.ar_session as *const ArSession, out_camera as *const ArCamera, &mut camera_tracking_state as *mut ArTrackingState);
             ArCamera_release(out_camera);
 
-            if ar_status_update != 0 {
-                log::e(&format!("arcore::lib::::on_draw ArSession_resume error, ar_status_update = {}", ar_status_update));
-            } else if camera_tracking_state != AR_TRACKING_STATE_TRACKING as i32 {
-                log::e(&format!("arcore::lib::::on_draw ArCamera_getTrackingState error, camera_tracking_state = {}", camera_tracking_state));
-            } else {
-                self.update_proj_view_matrix();
+            // Render Background
+            self.render_background();
 
-                let p = util::get_mat4_from_array(self.proj_mat4x4);
-                let v = util::get_mat4_from_array(self.view_mat4x4);
-
-                self.render_background();
-
-                // if self.show_plane {
-                //     self.render_planes();
-                // }
-                //
-                // if self.show_point {
-                //     self.render_point_cloud(p * v);
-                // }
-
-                // if self.show_image {
-                //     ::augmented_image::track_images(self.ar_session as *const ArSession, self.ar_frame as *const ArFrame, &mut self.image_obj_map_);
-                // }
-
-                // if self.show_faces {
-                //     ::augmented_face::track_faces(self.ar_session as *const ArSession, self.ar_frame as *const ArFrame, &mut self.faces_obj_map_);
-                // }
-
-                if self.shop_rate % 10 == 0 {
-                    log::d(&format!("arcore::lib::::on_draw shop_rate = {}", &self.shop_rate));
-                }
+            if camera_tracking_state != AR_TRACKING_STATE_TRACKING as i32 {
+                log::e(&format!("arcore::lib::on_draw_frame ArCamera_getTrackingState error, camera_tracking_state = {}\n", camera_tracking_state));
+                return
             }
         }
-        self.shop_rate += 1;
     }
 
     pub fn on_touched(&mut self, x: f32, y: f32) -> i32 {
-        log::i("arcore::lib::on_touched");
+        log::i("arcore::lib::on_touched\n");
 
         // Update loop if not hited, in onDraw
         unsafe {
@@ -420,11 +496,11 @@ impl ArCore {
                             }
                         }
 
-                        let colored_anchor = ColoredAnchor { anchor, color };
+                        // let colored_anchor = ColoredAnchor { anchor, color };
 
-                        log::d(&format!("arcore::lib::on_touched i : {}, colored_anchor: {:?}", i, &colored_anchor));
+                        // log::d(&format!("arcore::lib::on_touched i : {}, colored_anchor: {:?}", i, &colored_anchor));
 
-                        self.plane_obj_map_.insert(i, colored_anchor);
+                        // self.plane_obj_map_.insert(i, colored_anchor);
 
                         return i;
                     } else if AR_TRACKABLE_POINT as i32 == ar_trackable_type {
@@ -474,26 +550,122 @@ impl ArCore {
         }
     }
 
-
     fn init_renderers(&mut self) {
-        log::i("arcore::lib::init_renderers");
-
-        let bgr = BackgroundRenderer::new();
-        self.background_texture_id = bgr.get_texture_id();
-        self.renderer_background_ = Some(bgr);
-
-        // let plr = PlaneRenderer::new();
-        // self.renderer_plane_ = Some(plr);
-
-        // let pcr = PointCloudRenderer::new();
-        // self.renderer_point_cloud_ = Some(pcr);
+        self.init_render_background();
+        // self.init_render_plane();
+        // self.init_render_point();
     }
 
+    fn init_render_background(&mut self) {
+        unsafe {
+            // Camera
+            let camera_texture_id = glesv2::gen_textures(1)[0];
+            glesv2::bind_texture(GL_TEXTURE_EXTERNAL_OES, camera_texture_id);
+            glesv2::tex_parameteri(GL_TEXTURE_EXTERNAL_OES, glesv2::GL_TEXTURE_MIN_FILTER, glesv2::GL_LINEAR as i32);
+            glesv2::tex_parameteri(GL_TEXTURE_EXTERNAL_OES, glesv2::GL_TEXTURE_MAG_FILTER, glesv2::GL_LINEAR as i32);
+
+            let camera_program = util::create_program(VS_SRC_CAMERA, FS_SRC_CAMERA);
+            if camera_program == 0 {
+                log::e("arcore::background_renderer::new Could not create camera program.\n");
+            }
+
+            let camera_position_attrib = glesv2::get_attrib_location(camera_program, "a_Position") as u32;
+            let camera_tex_coord_attrib = glesv2::get_attrib_location(camera_program, "a_TexCoord") as u32;
+            let camera_texture_uniform = glesv2::get_uniform_location(camera_program, "sTexture") as u32;
+
+            self.camera_program_ = camera_program;
+            self.camera_position_attrib_ = camera_position_attrib;
+            self.camera_tex_coord_attrib_ = camera_tex_coord_attrib;
+            self.camera_texture_uniform_ = camera_texture_uniform;
+            self.camera_texture_id_ = camera_texture_id;
+        }
+    }
+
+    fn init_render_plane(&mut self) {
+
+    }
+
+    fn init_render_point(&mut self) {
+
+    }
+
+    // private functions
     fn render_background(&mut self) {
-        self.clone().renderer_background_.unwrap().draw(self.ar_session as *const ArSession, self.ar_frame as *const ArFrame);
+        log::i("arcore::lib::render_background\n");
+        unsafe {
+            let mut x = 0;
+            let geometry_changed: *mut i32 = &mut x;
+            ArFrame_getDisplayGeometryChanged(self.ar_session, self.ar_frame, geometry_changed);
+
+            log::d(&format!("arcore::lib::render_background geometry_changed : {}\n", *geometry_changed));
+
+            if *geometry_changed != 0 || !self.uvs_initialized_ {
+                ArFrame_transformCoordinates2d(
+                    self.ar_session,
+                    self.ar_frame,
+                    AR_COORDINATES_2D_OPENGL_NORMALIZED_DEVICE_COORDINATES as i32,
+                    K_NUM_VERTICES * 2,
+                    &K_VERS as *const f32,
+                    AR_COORDINATES_2D_TEXTURE_NORMALIZED as i32,
+                    self.uvs_transformed_.as_mut_ptr(),
+                );
+                self.uvs_initialized_ = true;
+                log::d(&format!("arcore::lib::render_background self.uvs_initialized_ : {}\n", self.uvs_initialized_));
+            }
+
+            // let mut frame_timestamp: i64 = 0;
+            // ArFrame_getTimestamp(session, frame, &mut frame_timestamp as *mut i64);
+            // if frame_timestamp == 0 {
+            //     return
+            // }
+
+            // if depth_texture_id_ == -1 || camera_texture_id_ == -1 {
+            //     return
+            // }
+
+            log::d(&format!("arcore::lib::render_background camera_program : {}\n", &self.camera_program_));
+            log::d(&format!("arcore::lib::render_background camera_texture_uniform : {}\n", &self.camera_texture_uniform_));
+            log::d(&format!("arcore::lib::render_background camera_position_attrib : {}\n", &self.camera_position_attrib_));
+            log::d(&format!("arcore::lib::render_background camera_tex_coord_attrib : {}\n", &self.camera_tex_coord_attrib_));
+
+            glesv2::use_program(self.camera_program_);
+            glesv2::depth_mask(false);
+
+            glesv2::uniform1i(self.camera_texture_uniform_ as i32, 1);
+            glesv2::active_texture(glesv2::GL_TEXTURE1);
+            glesv2::bind_texture(GL_TEXTURE_EXTERNAL_OES, self.camera_texture_id_);
+
+            // let vbo = glesv2::gen_buffers(2);
+            //
+            // glesv2::bind_buffer(glesv2::GL_ARRAY_BUFFER, vbo[0]);
+            // glesv2::buffer_data(glesv2::GL_ARRAY_BUFFER, &K_VERS, glesv2::GL_STATIC_DRAW);
+            // glesv2::enable_vertex_attrib_array(self.camera_position_attrib_);
+            // glesv2::vertex_attrib_pointer(self.camera_position_attrib_, 2, glesv2::GL_FLOAT, false, 0, &[0]);
+            //
+            // glesv2::bind_buffer(glesv2::GL_ARRAY_BUFFER, vbo[1]);
+            // glesv2::buffer_data(glesv2::GL_ARRAY_BUFFER, &self.uvs_transformed_, glesv2::GL_STATIC_DRAW);
+            // glesv2::enable_vertex_attrib_array(self.camera_tex_coord_attrib_);
+            // glesv2::vertex_attrib_pointer(self.camera_tex_coord_attrib_, 2, glesv2::GL_FLOAT, false, 0, &[0]);
+            //
+            // glesv2::draw_arrays(glesv2::GL_TRIANGLE_STRIP, 0, 4);
+
+            glesv2::enable_vertex_attrib_array(self.camera_position_attrib_);
+            glesv2::vertex_attrib_pointer(self.camera_position_attrib_, 2, glesv2::GL_FLOAT, false, 0, &K_VERS);
+
+            glesv2::enable_vertex_attrib_array(self.camera_tex_coord_attrib_);
+            glesv2::vertex_attrib_pointer(self.camera_tex_coord_attrib_, 2, glesv2::GL_FLOAT, false, 0, &self.uvs_transformed_);
+
+            glesv2::draw_arrays(glesv2::GL_TRIANGLE_STRIP, 0, 4);
+
+            glesv2::use_program(0);
+            glesv2::depth_mask(true);
+
+            log::d("arcore::lib::render_background finish.\n");
+        }
     }
 
     fn render_point_cloud(&mut self, mvp_matrix: ::glm::Mat4) {
+        log::i("arcore::lib::render_point_cloud\n");
         // Update and render point cloud.
         unsafe {
             let mut ar_point_cloud: *mut ArPointCloud = ::std::ptr::null_mut();
@@ -510,6 +682,7 @@ impl ArCore {
     }
 
     fn render_planes(&mut self) {
+        log::i("arcore::lib::render_planes\n");
         // Update loop, in onDraw
         unsafe {
 
@@ -566,6 +739,7 @@ impl ArCore {
     }
 
     fn update_proj_view_matrix(&mut self) {
+        log::i("arcore::lib::update_proj_view_matrix\n");
         unsafe {
             let mut out_camera: *mut ArCamera = ::std::ptr::null_mut();
             ArFrame_acquireCamera(self.ar_session as *const ArSession,
@@ -585,6 +759,7 @@ impl ArCore {
         }
     }
 }
+
 
 fn get_matrix_by_anchor_and_index(session: *mut ArSession, obj_map: &HashMap<i32, ColoredAnchor>, index: i32) -> [f32; 16] {
     let mut mode_mat4x4 = [0.0; 16];
@@ -614,55 +789,46 @@ fn get_transform_matrix_from_anchor(session: *mut ArSession, anchor: *mut ArAnch
     }
 }
 
-// fn get_ar_image_from_camera(session: *const ArSession, frame: *const ArFrame) -> *mut ArImage {
-//     unsafe {
-//         let mut ar_image: *mut ArImage = ::std::ptr::null_mut();
-//         let ar_status: ArStatus = ArFrame_acquireCameraImage(session as *mut ArSession, frame as *mut ArFrame, &mut ar_image);
-//         if ar_status != AR_SUCCESS as i32 {
-//             log::d(&format!("arcore::lib::get_ar_image_from_camera ar_status : {:?}", &ar_status));
-//         }
-//         ar_image
-//     }
-// }
-
-// fn get_a_image(ar_image: *const ArImage) -> *const ::ndk_sys::AImage {
-//     unsafe {
-//         let mut out_ndk_image: *const AImage = ::std::ptr::null_mut();
-//         ArImage_getNdkImage(ar_image, &mut out_ndk_image as *mut *const AImage);
-//         let a_image = ::std::mem::transmute::<*const AImage, *mut ::ndk_sys::AImage>(out_ndk_image); // transfor arcore AImage to NDK AImage
-//         a_image
-//     }
-// }
+fn get_ar_image_from_camera(session: *const ArSession, frame: *const ArFrame) -> *mut ArImage {
+    unsafe {
+        let mut ar_image: *mut ArImage = ::std::ptr::null_mut();
+        let ar_status: ArStatus = ArFrame_acquireCameraImage(session as *mut ArSession, frame as *mut ArFrame, &mut ar_image);
+        if ar_status != AR_SUCCESS as i32 {
+            log::d(&format!("arcore::lib::get_ar_image_from_camera ar_status : {:?}", &ar_status));
+        }
+        ar_image
+    }
+}
 
 // java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "ArImage_getFormat"
-//fn get_ar_image_format(session: *const ArSession, ar_image: *const ArImage) -> i32 {
-//    unsafe {
-//        let mut height = 0;
-//        ArImage_getFormat(session, ar_image, &mut height as *mut i32);
-//        height
-//    }
-//}
+fn get_ar_image_format(session: *const ArSession, ar_image: *const ArImage) -> i32 {
+    unsafe {
+        let mut height = 0;
+        ArImage_getFormat(session, ar_image, &mut height as *mut i32);
+        height
+    }
+}
 
-// fn get_ar_image_height(session: *const ArSession, ar_image: *const ArImage) -> i32 {
-//     unsafe {
-//         let mut height = 0;
-//         ArImage_getHeight(session, ar_image, &mut height as *mut i32);
-//         height
-//     }
-// }
-//
-// fn get_ar_image_width(session: *const ArSession, ar_image: *const ArImage) -> i32 {
-//     unsafe {
-//         let mut width = 0;
-//         ArImage_getWidth(session, ar_image, &mut width as *mut i32);
-//         width
-//     }
-// }
-//
-// fn get_ar_image_timestamp(session: *const ArSession, ar_image: *const ArImage) -> i64 {
-//     unsafe {
-//         let mut timestamp = 0;
-//         ArImage_getTimestamp(session, ar_image, &mut timestamp as *mut i64);
-//         timestamp
-//     }
-// }
+fn get_ar_image_height(session: *const ArSession, ar_image: *const ArImage) -> i32 {
+    unsafe {
+        let mut height = 0;
+        ArImage_getHeight(session, ar_image, &mut height as *mut i32);
+        height
+    }
+}
+
+fn get_ar_image_width(session: *const ArSession, ar_image: *const ArImage) -> i32 {
+    unsafe {
+        let mut width = 0;
+        ArImage_getWidth(session, ar_image, &mut width as *mut i32);
+        width
+    }
+}
+
+fn get_ar_image_timestamp(session: *const ArSession, ar_image: *const ArImage) -> i64 {
+    unsafe {
+        let mut timestamp = 0;
+        ArImage_getTimestamp(session, ar_image, &mut timestamp as *mut i64);
+        timestamp
+    }
+}
