@@ -1,4 +1,4 @@
-use ndk_sys::__android_log_write as android_log_write;
+use ndk_sys::__android_log_print as android_log_print;
 
 const TAG: &str = "android_ndk_in_arcore";
 
@@ -25,7 +25,7 @@ pub fn e(message: &str) {
 
 pub fn log(prio: i32, message: &str) {
     unsafe {
-        android_log_write(
+        android_log_print(
             prio             as std::os::raw::c_int,
             TAG.as_ptr()     as *const std::os::raw::c_char,
             message.as_ptr() as *const std::os::raw::c_char,

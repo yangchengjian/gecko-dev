@@ -327,8 +327,21 @@ class HostWebGLContext final : public SupportsWeakPtr {
     mContext->DetachShader(*pProg, *pShader);
   }
 
+  // ArCore
   void DrawBackground() const {
     mContext->DrawBackground();
+  }
+
+  float* GetProjectMatrix() const {
+    return mContext->GetProjectMatrix();
+  }
+
+  float* GetViewMatrix() const {
+    return mContext->GetViewMatrix();
+  }
+
+  void GetModelMatrix(GLint type, GLint index, float* mat) const {
+    mContext->GetModelMatrix(type, index, mat);
   }
 
   void Flush() const { mContext->Flush(); }

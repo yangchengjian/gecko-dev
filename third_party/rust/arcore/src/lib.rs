@@ -113,6 +113,21 @@ pub unsafe extern "C" fn get_proj_matrix(arcore: ArCore) -> [f32; 16] {
     arcore.get_proj_matrix()
 }
 
+/// get view matrix
+#[no_mangle]
+pub unsafe extern "C" fn get_view_matrix(arcore: ArCore) -> [f32; 16] {
+    log::i("arcore::c::get_view_matrix\n");
+    arcore.get_view_matrix()
+}
+
+/// get model matrix
+#[no_mangle]
+pub unsafe extern "C" fn get_mode_matrix(arcore: ArCore, track_type: i32, index: i32) -> [f32; 16] {
+    log::i("arcore::c::get_mode_matrix\n");
+    // (*arcore).get_mode_matrix(track_type, index)
+    arcore.get_view_matrix()
+}
+
 /// ArAnchor Color
 #[repr(C)]
 #[derive(Clone, Debug)]
@@ -151,11 +166,10 @@ pub struct ArCore {
     uvs_initialized_: bool,
 
     // Object -------------------------------------------------
-    // show_plane: bool,
-    // show_point: bool,
-    // show_image: bool,
-    // show_faces: bool,
-    // shop_rate: i32,
+    show_plane: bool,
+    show_point: bool,
+    show_image: bool,
+    show_faces: bool,
 
     // plane_obj_map_: HashMap<i32, ColoredAnchor>,
     // point_obj_map_: HashMap<i32, ColoredAnchor>,
@@ -248,11 +262,10 @@ impl ArCore {
                 uvs_transformed_: [0.0; 8],
                 uvs_initialized_: false,
 
-                // show_plane: false,
-                // show_point: false,
-                // show_image: false,
-                // show_faces: false,
-                // shop_rate: 0,
+                show_plane: false,
+                show_point: false,
+                show_image: false,
+                show_faces: false,
 
                 // plane_obj_map_: HashMap::new(),
                 // point_obj_map_: HashMap::new(),
@@ -267,12 +280,12 @@ impl ArCore {
     }
 
     pub fn get_proj_matrix(&self) -> [f32; 16] {
-        log::print_matrix("arcore::lib::::get_proj_matrix", &self.proj_mat4x4);
+        // log::print_matrix("arcore::lib::::get_proj_matrix", &self.proj_mat4x4);
         self.proj_mat4x4
     }
 
     pub fn get_view_matrix(&self) -> [f32; 16] {
-        log::print_matrix("arcore::lib::::get_view_matrix", &self.view_mat4x4);
+        // log::print_matrix("arcore::lib::::get_view_matrix", &self.view_mat4x4);
         self.view_mat4x4
     }
 
@@ -341,10 +354,10 @@ impl ArCore {
 
     pub fn on_config_changed(&mut self, show_plane: bool, show_point: bool, show_image: bool, show_faces: bool) {
         log::i(&format!("arcore::lib::on_config_changed show_plane = {}, show_point = {}, show_image = {}, show_faces = {}", show_plane, show_point, show_image, show_faces));
-        // self.show_plane = show_plane;
-        // self.show_point = show_point;
-        // self.show_image = show_image;
-        // self.show_faces = show_faces;
+        self.show_plane = show_plane;
+        self.show_point = show_point;
+        self.show_image = show_image;
+        self.show_faces = show_faces;
     }
 
     pub fn on_draw_frame(&mut self) {
@@ -358,29 +371,26 @@ impl ArCore {
             let mut ar_status_update: ArStatus = ArSession_update(self.ar_session, self.ar_frame);
             if ar_status_update != 0 {
                 log::e(&format!("arcore::lib::on_draw_frame ArSession_update error, ar_status_update = {}\n", ar_status_update));
+                return
             }
 
             // Acquire Camera
             let mut out_camera: *mut ArCamera = ::std::ptr::null_mut();
             ArFrame_acquireCamera(self.ar_session as *const ArSession, self.ar_frame as *const ArFrame, &mut out_camera);
-
-            // Update Matrix
-            self.update_proj_view_matrix();
-            // let p = util::get_mat4_from_array(self.proj_mat4x4);
-            // let v = util::get_mat4_from_array(self.view_mat4x4);
-
             // Camera Tracking State
             let mut camera_tracking_state: ArTrackingState = 0;
             ArCamera_getTrackingState(self.ar_session as *const ArSession, out_camera as *const ArCamera, &mut camera_tracking_state as *mut ArTrackingState);
             ArCamera_release(out_camera);
-
-            // Render Background
-            self.render_background();
-
             if camera_tracking_state != AR_TRACKING_STATE_TRACKING as i32 {
                 log::e(&format!("arcore::lib::on_draw_frame ArCamera_getTrackingState error, camera_tracking_state = {}\n", camera_tracking_state));
                 return
             }
+
+            // Render Background
+            self.render_background();
+
+            // Update Matrix
+            self.update_proj_view_matrix();
         }
     }
 
@@ -496,9 +506,9 @@ impl ArCore {
                             }
                         }
 
-                        // let colored_anchor = ColoredAnchor { anchor, color };
+                        let colored_anchor = ColoredAnchor { anchor, color };
 
-                        // log::d(&format!("arcore::lib::on_touched i : {}, colored_anchor: {:?}", i, &colored_anchor));
+                        log::d(&format!("arcore::lib::on_touched i : {}, colored_anchor: {:?}", i, &colored_anchor));
 
                         // self.plane_obj_map_.insert(i, colored_anchor);
 
@@ -597,8 +607,6 @@ impl ArCore {
             let geometry_changed: *mut i32 = &mut x;
             ArFrame_getDisplayGeometryChanged(self.ar_session, self.ar_frame, geometry_changed);
 
-            log::d(&format!("arcore::lib::render_background geometry_changed : {}\n", *geometry_changed));
-
             if *geometry_changed != 0 || !self.uvs_initialized_ {
                 ArFrame_transformCoordinates2d(
                     self.ar_session,
@@ -610,7 +618,6 @@ impl ArCore {
                     self.uvs_transformed_.as_mut_ptr(),
                 );
                 self.uvs_initialized_ = true;
-                log::d(&format!("arcore::lib::render_background self.uvs_initialized_ : {}\n", self.uvs_initialized_));
             }
 
             // let mut frame_timestamp: i64 = 0;
@@ -623,10 +630,10 @@ impl ArCore {
             //     return
             // }
 
-            log::d(&format!("arcore::lib::render_background camera_program : {}\n", &self.camera_program_));
-            log::d(&format!("arcore::lib::render_background camera_texture_uniform : {}\n", &self.camera_texture_uniform_));
-            log::d(&format!("arcore::lib::render_background camera_position_attrib : {}\n", &self.camera_position_attrib_));
-            log::d(&format!("arcore::lib::render_background camera_tex_coord_attrib : {}\n", &self.camera_tex_coord_attrib_));
+            // log::d(&format!("arcore::lib::render_background camera_program : {}\n", &self.camera_program_));
+            // log::d(&format!("arcore::lib::render_background camera_texture_uniform : {}\n", &self.camera_texture_uniform_));
+            // log::d(&format!("arcore::lib::render_background camera_position_attrib : {}\n", &self.camera_position_attrib_));
+            // log::d(&format!("arcore::lib::render_background camera_tex_coord_attrib : {}\n", &self.camera_tex_coord_attrib_));
 
             glesv2::use_program(self.camera_program_);
             glesv2::depth_mask(false);
@@ -659,8 +666,6 @@ impl ArCore {
 
             glesv2::use_program(0);
             glesv2::depth_mask(true);
-
-            log::d("arcore::lib::render_background finish.\n");
         }
     }
 
@@ -756,6 +761,9 @@ impl ArCore {
                                    self.view_mat4x4.as_mut_ptr());
 
             ArCamera_release(out_camera);
+
+            // let p = util::get_mat4_from_array(self.proj_mat4x4);
+            // let v = util::get_mat4_from_array(self.view_mat4x4);
         }
     }
 }

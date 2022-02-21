@@ -20,6 +20,10 @@ struct ArCore {
   GLuint camera_texture_id_;
   float uvs_transformed_[8];
   bool uvs_initialized_;
+  bool show_plane;
+  bool show_point;
+  bool show_image;
+  bool show_faces;
   float view_mat4x4[16];
   float proj_mat4x4[16];
 };
@@ -42,5 +46,11 @@ void on_draw_frame(ArCore *arcore);
 
 /// get project matrix
 float (get_proj_matrix(ArCore arcore))[16];
+
+/// get view matrix
+float (get_view_matrix(ArCore arcore))[16];
+
+/// get model matrix
+float (get_mode_matrix(ArCore arcore, int32_t track_type, int32_t index))[16];
 
 } // extern "C"

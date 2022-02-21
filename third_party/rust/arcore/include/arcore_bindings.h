@@ -14,6 +14,8 @@
 #include "GLContext.h"
 #include "glm/glm.hpp"
 
+struct HashMap;
+
 /// ArCore
 struct ArCore {
   int32_t width_;
@@ -30,6 +32,15 @@ struct ArCore {
   GLuint camera_texture_uniform_;
   float uvs_transformed_[8];
   bool uvs_initialized_;
+
+  bool show_plane;
+  bool show_point;
+  bool show_image;
+  bool show_faces;
+//  HashMap<int32_t, ColoredAnchor> plane_obj_map_;
+//  HashMap<int32_t, ColoredAnchor> point_obj_map_;
+//  HashMap<int32_t, ColoredAnchor> image_obj_map_;
+//  HashMap<int32_t, ColoredAnchor> faces_obj_map_;
 
   float view_mat4x4[16];
   float proj_mat4x4[16];
@@ -48,11 +59,6 @@ void on_display_changed(ArCore *arcore, int32_t display_rotation, int32_t width,
 
 /// draw background and set relevant matrix
 void on_draw_frame(ArCore *arcore);
-
-
-void after_init_arcore(ArCore *arcore, mozilla::gl::GLContext* gl);
-
-void after_draw_frame(ArCore *arcore, mozilla::gl::GLContext* gl);
 
 } // extern "C"
 

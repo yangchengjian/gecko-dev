@@ -603,6 +603,9 @@ interface mixin WebGLRenderingContextBase {
     void drawArrays(GLenum mode, GLint first, GLsizei count);
     void drawElements(GLenum mode, GLsizei count, GLenum type, GLintptr offset);
     void drawBackground();
+    any getProjectMatrix();
+    any getViewMatrix();
+    any getModelMatrix(GLint track_type, GLint index);
 
     void enable(GLenum cap);
     void enableVertexAttribArray(GLuint index);

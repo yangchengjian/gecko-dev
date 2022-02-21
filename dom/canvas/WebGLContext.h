@@ -252,6 +252,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
     UNMASKED_RENDERER_WEBGL = 0x9246
   };
 
+ // ArCore
  public:
   ArCore arcore;
 
@@ -562,7 +563,11 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   void DepthRange(GLclampf zNear, GLclampf zFar);
   void DetachShader(WebGLProgram& prog, const WebGLShader& shader);
   void DrawBuffers(const std::vector<GLenum>& buffers);
+  // ArCore
   void DrawBackground();
+  float* GetProjectMatrix();
+  float* GetViewMatrix();
+  void GetModelMatrix(GLint type, GLint index, float*);
   void Flush();
   void Finish();
 
