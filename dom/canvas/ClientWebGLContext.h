@@ -1315,6 +1315,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   // ArCore
   void DrawBackground();
 
+  void OnTouched(GLfloat x, GLfloat y);
+
   void GetProjectMatrix(JSContext* cx, JS::MutableHandle<JS::Value> retval);
 
   void GetViewMatrix(JSContext* cx, JS::MutableHandle<JS::Value> retval);

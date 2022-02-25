@@ -15,7 +15,6 @@ extern crate jni_sys;
 extern crate nalgebra_glm;
 extern crate ndk;
 extern crate ndk_sys;
-extern crate rgb;
 
 use std::collections::HashMap;
 use jni_sys::JavaVM;
@@ -106,31 +105,19 @@ pub unsafe extern "C" fn on_draw_frame(arcore: *mut ArCore) {
     log::d(&format!("arcore::c::on_draw_frame arcore after = {:?}\n", &*arcore));
 }
 
-/// get project matrix
+/// touch to anchor
 #[no_mangle]
-pub unsafe extern "C" fn get_proj_matrix(arcore: ArCore) -> [f32; 16] {
-    log::i("arcore::c::get_proj_matrix\n");
-    arcore.get_proj_matrix()
-}
+pub unsafe extern "C" fn on_touched(arcore: *mut ArCore, x: f32, y: f32) {
+    log::i("arcore::c::on_touched\n");
 
-/// get view matrix
-#[no_mangle]
-pub unsafe extern "C" fn get_view_matrix(arcore: ArCore) -> [f32; 16] {
-    log::i("arcore::c::get_view_matrix\n");
-    arcore.get_view_matrix()
-}
-
-/// get model matrix
-#[no_mangle]
-pub unsafe extern "C" fn get_mode_matrix(arcore: ArCore, track_type: i32, index: i32) -> [f32; 16] {
-    log::i("arcore::c::get_mode_matrix\n");
-    // (*arcore).get_mode_matrix(track_type, index)
-    arcore.get_view_matrix()
+    log::d(&format!("arcore::c::on_touched arcore before = {:?}\n", &*arcore));
+    (*arcore).on_touched(x, y);
+    log::d(&format!("arcore::c::on_touched arcore after = {:?}\n", &*arcore));
 }
 
 /// ArAnchor Color
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ColoredAnchor {
     anchor: *mut ArAnchor,
     color: [f32; 4],
@@ -156,41 +143,44 @@ pub struct ArCore {
     camera_texture_uniform_: glesv2::GLuint,
     camera_texture_id_: glesv2::GLuint,
 
+    uvs_transformed_: [f32; 8],
+    uvs_initialized_: bool,
+
+    // Depth --------------------------------------------------
     // depth_program_: glesv2::GLuint,
     // depth_texture_id_: glesv2::GLuint,
     // depth_texture_uniform_: glesv2::GLuint,
     // depth_position_attrib_: glesv2::GLuint,
     // depth_tex_coord_attrib_: glesv2::GLuint,
 
-    uvs_transformed_: [f32; 8],
-    uvs_initialized_: bool,
-
     // Object -------------------------------------------------
-    show_plane: bool,
-    show_point: bool,
-    show_image: bool,
-    show_faces: bool,
+    // show_plane: bool,
+    // show_point: bool,
+    // show_image: bool,
+    // show_faces: bool,
 
+    anchored: bool,
+    anchor: *mut ArAnchor,
+    color: [f32; 4],
     // plane_obj_map_: HashMap<i32, ColoredAnchor>,
-    // point_obj_map_: HashMap<i32, ColoredAnchor>,
     // image_obj_map_: HashMap<i32, ColoredAnchor>,
     // faces_obj_map_: HashMap<i32, ColoredAnchor>,
 
     // number_to_render: usize,
 
     // Matrix -------------------------------------------------
-    view_mat4x4: [f32; 16],
     proj_mat4x4: [f32; 16],
+    view_mat4x4: [f32; 16],
+    mode_mat4x4: [f32; 16],
 }
 
 impl ArCore {
-
     pub fn new(env: *mut JNIEnv, context: jobject) -> ArCore {
         log::i("arcore::lib::new\n");
         unsafe {
             // Create ArSession
             let mut out_session_pointer: *mut ArSession = ::std::ptr::null_mut();
-            let mut ar_status_create: ArStatus = ArSession_create(env as *mut ::std::os::raw::c_void, context as *mut ::std::os::raw::c_void, &mut out_session_pointer);
+            let ar_status_create: ArStatus = ArSession_create(env as *mut ::std::os::raw::c_void, context as *mut ::std::os::raw::c_void, &mut out_session_pointer);
             if ar_status_create != 0 {
                 log::e(&format!("arcore::lib::new ArSession_create error, ar_status_create = {}\n", ar_status_create));
             }
@@ -219,7 +209,7 @@ impl ArCore {
             // ArAugmentedImageDatabase_destroy(ar_augmented_image_database);
 
             // Check ArSession configure
-            let mut ar_status_configure: ArStatus = ArSession_configure(out_session_pointer, out_config);
+            let ar_status_configure: ArStatus = ArSession_configure(out_session_pointer, out_config);
             if ar_status_configure != 0 {
                 log::e(&format!("arcore::lib::new ArSession_configure error, ar_status_configure = {}\n", ar_status_configure));
             }
@@ -233,13 +223,12 @@ impl ArCore {
             ArSession_setDisplayGeometry(out_session_pointer, 0, 1, 1);
 
             // ArSession resume
-            let mut ar_status_resume: ArStatus = ArSession_resume(out_session_pointer);
+            let ar_status_resume: ArStatus = ArSession_resume(out_session_pointer);
             if ar_status_resume != 0 {
                 log::e(&format!("arcore::lib::new ArSession_resume error, ar_status_resume = {}\n", ar_status_resume));
             }
 
             ArCore {
-
                 width_: 1,
                 height_: 1,
                 rotation_: 0,
@@ -253,60 +242,42 @@ impl ArCore {
                 camera_texture_uniform_: 0,
                 camera_texture_id_: 0,
 
+                uvs_transformed_: [0.0; 8],
+                uvs_initialized_: false,
+
                 // depth_program_: depth_program,
                 // depth_texture_id_: depth_texture_id,
                 // depth_texture_uniform_: depth_texture_uniform,
                 // depth_position_attrib_: depth_position_attrib,
                 // depth_tex_coord_attrib_: depth_tex_coord_attrib,
 
-                uvs_transformed_: [0.0; 8],
-                uvs_initialized_: false,
+                // show_plane: false,
+                // show_point: false,
+                // show_image: false,
+                // show_faces: false,
 
-                show_plane: false,
-                show_point: false,
-                show_image: false,
-                show_faces: false,
-
+                anchored: false,
+                anchor: std::ptr::null_mut(),
+                color: [0.0; 4],
                 // plane_obj_map_: HashMap::new(),
-                // point_obj_map_: HashMap::new(),
                 // image_obj_map_: HashMap::new(),
                 // faces_obj_map_: HashMap::new(),
+
                 // number_to_render: 0,
 
-                view_mat4x4: [0.0; 16],
                 proj_mat4x4: [0.0; 16],
+                view_mat4x4: [0.0; 16],
+                mode_mat4x4: [0.0; 16],
             }
         }
     }
 
     pub fn get_proj_matrix(&self) -> [f32; 16] {
-        // log::print_matrix("arcore::lib::::get_proj_matrix", &self.proj_mat4x4);
         self.proj_mat4x4
     }
 
     pub fn get_view_matrix(&self) -> [f32; 16] {
-        // log::print_matrix("arcore::lib::::get_view_matrix", &self.view_mat4x4);
         self.view_mat4x4
-    }
-
-    // 1: plane, 2: point, 3: images, 4: faces
-    pub fn get_mode_matrix(&self, track_type: i32, index: i32) {
-        log::i(&format!("arcore::lib::get_mode_matrix track_type = {}, index = {}", track_type, index));
-        // match track_type {
-        //     1 => get_matrix_by_anchor_and_index(self.ar_session, &self.plane_obj_map_, index),
-        //     2 => get_matrix_by_anchor_and_index(self.ar_session, &self.point_obj_map_, index),
-        //     3 => get_matrix_by_anchor_and_index(self.ar_session, &self.image_obj_map_, index),
-        //     4 => get_matrix_by_anchor_and_index(self.ar_session, &self.faces_obj_map_, index),
-        //     _ => get_matrix_by_anchor_and_index(self.ar_session, &self.plane_obj_map_, index),
-        // }
-    }
-
-    pub fn get_view_mode_matrix(&self, track_type: i32, index: i32) {
-        log::i(&format!("arcore::lib::get_view_mode_matrix track_type = {}, index = {}", track_type, index));
-        // let mode_mat4x4 = self.get_mode_matrix(track_type, index);
-        // let vm = util::get_mat4_from_array(self.get_view_matrix()) * util::get_mat4_from_array(mode_mat4x4);
-        // log::print_matrix("arcore::lib::get_view_mode_matrix", &util::get_array_from_mat4(vm));
-        // util::get_array_from_mat4(vm)
     }
 
     pub fn get_light_estimation(&mut self) -> [f32; 4] {
@@ -354,10 +325,10 @@ impl ArCore {
 
     pub fn on_config_changed(&mut self, show_plane: bool, show_point: bool, show_image: bool, show_faces: bool) {
         log::i(&format!("arcore::lib::on_config_changed show_plane = {}, show_point = {}, show_image = {}, show_faces = {}", show_plane, show_point, show_image, show_faces));
-        self.show_plane = show_plane;
-        self.show_point = show_point;
-        self.show_image = show_image;
-        self.show_faces = show_faces;
+        // self.show_plane = show_plane;
+        // self.show_point = show_point;
+        // self.show_image = show_image;
+        // self.show_faces = show_faces;
     }
 
     pub fn on_draw_frame(&mut self) {
@@ -368,174 +339,181 @@ impl ArCore {
             ArSession_setCameraTextureName(self.ar_session, self.camera_texture_id_);
 
             // ArSession update
-            let mut ar_status_update: ArStatus = ArSession_update(self.ar_session, self.ar_frame);
+            let ar_status_update: ArStatus = ArSession_update(self.ar_session, self.ar_frame);
             if ar_status_update != 0 {
                 log::e(&format!("arcore::lib::on_draw_frame ArSession_update error, ar_status_update = {}\n", ar_status_update));
-                return
             }
 
-            // Acquire Camera
-            let mut out_camera: *mut ArCamera = ::std::ptr::null_mut();
-            ArFrame_acquireCamera(self.ar_session as *const ArSession, self.ar_frame as *const ArFrame, &mut out_camera);
-            // Camera Tracking State
-            let mut camera_tracking_state: ArTrackingState = 0;
-            ArCamera_getTrackingState(self.ar_session as *const ArSession, out_camera as *const ArCamera, &mut camera_tracking_state as *mut ArTrackingState);
-            ArCamera_release(out_camera);
-            if camera_tracking_state != AR_TRACKING_STATE_TRACKING as i32 {
-                log::e(&format!("arcore::lib::on_draw_frame ArCamera_getTrackingState error, camera_tracking_state = {}\n", camera_tracking_state));
-                return
-            }
+            // Update Project and View Matrix
+            self.update_matrix_of_project_and_view();
+
+            // Update Model Matrix
+            self.update_matrix_of_model();
 
             // Render Background
             self.render_background();
-
-            // Update Matrix
-            self.update_proj_view_matrix();
         }
     }
 
     pub fn on_touched(&mut self, x: f32, y: f32) -> i32 {
-        log::i("arcore::lib::on_touched\n");
+        log::i(&format!("arcore::lib::on_touched x = {}, y = {}", x, y));
 
-        // Update loop if not hited, in onDraw
+        if self.ar_session == ::std::ptr::null_mut() && self.ar_frame == ::std::ptr::null_mut() {
+            return -1;
+        }
+
         unsafe {
-            if self.ar_session != ::std::ptr::null_mut() && self.ar_frame != ::std::ptr::null_mut() {
-                let mut hit_result_list: *mut ArHitResultList = ::std::ptr::null_mut();
-                ArHitResultList_create(self.ar_session as *const ArSession, &mut hit_result_list);
-                ArFrame_hitTest(self.ar_session as *const ArSession, self.ar_frame as *const ArFrame,
-                                x, y,
-                                hit_result_list);
+            let mut hit_result_list: *mut ArHitResultList = ::std::ptr::null_mut();
+            ArHitResultList_create(
+                self.ar_session as *const ArSession,
+                &mut hit_result_list,
+            );
+            ArFrame_hitTest(
+                self.ar_session as *const ArSession,
+                self.ar_frame as *const ArFrame,
+                x,
+                y,
+                hit_result_list,
+            );
 
-                log::d(&format!("arcore::lib::on_touched x = {}, y = {}", x, y));
+            let mut hit_result_list_size = 0;
+            ArHitResultList_getSize(
+                self.ar_session as *const ArSession,
+                hit_result_list as *const ArHitResultList,
+                &mut hit_result_list_size as *mut i32,
+            );
 
-                let mut hit_result_list_size = 0;
-                ArHitResultList_getSize(self.ar_session as *const ArSession,
-                                        hit_result_list as *const ArHitResultList,
-                                        &mut hit_result_list_size as *mut i32);
+            log::d(&format!("arcore::lib::on_touched hit_result_list_size = {}", hit_result_list_size));
 
-                log::d(&format!("arcore::lib::on_touched hit_result_list_size = {}", hit_result_list_size));
-                let mut trackable_type: ArTrackableType = AR_TRACKABLE_NOT_VALID as i32;
-
-
-                for i in 0..hit_result_list_size {
-                    let mut ar_hit_result: *mut ArHitResult = ::std::ptr::null_mut();
-                    ArHitResult_create(self.ar_session as *const ArSession, &mut ar_hit_result);
-                    ArHitResultList_getItem(self.ar_session as *const ArSession,
-                                            hit_result_list as *const ArHitResultList,
-                                            i,
-                                            ar_hit_result);
-                    if ar_hit_result == ::std::ptr::null_mut() {
-                        log::e(&format!("arcore::lib::on_touched ArHitResultList_getItem error"));
-                        return -1;
-                    }
-
-
-                    let mut ar_trackable: *mut ArTrackable = ::std::ptr::null_mut();
-                    ArHitResult_acquireTrackable(self.ar_session as *const ArSession,
-                                                 ar_hit_result as *const ArHitResult,
-                                                 &mut ar_trackable);
-
-                    let mut ar_trackable_type: ArTrackableType = AR_TRACKABLE_NOT_VALID as i32;
-                    ArTrackable_getType(self.ar_session as *const ArSession,
-                                        ar_trackable as *const ArTrackable,
-                                        &mut ar_trackable_type as *mut ArTrackableType);
-
-                    if ar_trackable_type == AR_TRACKABLE_PLANE as i32 {
-                        let mut ar_pose: *mut ArPose = ::std::ptr::null_mut();
-                        ArPose_create(self.ar_session as *const ArSession, 0 as *const _, &mut ar_pose);
-
-                        ArHitResult_getHitPose(self.ar_session as *const ArSession,
-                                               ar_hit_result as *const ArHitResult,
-                                               ar_pose);
-
-                        let mut in_polygon = 0;
-                        let mut ar_plane: *mut ArPlane = ::std::mem::transmute::<*mut ArTrackable, *mut ArPlane>(ar_trackable);
-
-                        ArPlane_isPoseInPolygon(self.ar_session as *const ArSession,
-                                                ar_plane as *const ArPlane,
-                                                ar_pose as *const ArPose,
-                                                &mut in_polygon as *mut i32);
-
-                        ArPose_destroy(ar_pose);
-
-                        if in_polygon != 0 {
-                            log::e(&format!("arcore::lib::on_touched in_polygon = {}", in_polygon));
-                            return -1;
-                        }
-
-                        let mut anchor: *mut ArAnchor = ::std::ptr::null_mut();
-                        let ar_status: ArStatus = ArHitResult_acquireNewAnchor(self.ar_session,
-                                                                               ar_hit_result,
-                                                                               &mut anchor);
-                        if ar_status != AR_SUCCESS as i32 {
-                            log::e(&format!("arcore::lib::on_touched ArHitResult_acquireNewAnchor error"));
-                            return -1;
-                        }
-
-                        let mut tracking_state: ArTrackingState = AR_TRACKING_STATE_STOPPED as i32;
-                        ArAnchor_getTrackingState(self.ar_session as *const ArSession,
-                                                  anchor as *const ArAnchor,
-                                                  &mut tracking_state as *mut ArTrackingState);
-
-                        if tracking_state != AR_TRACKING_STATE_TRACKING as i32 {
-                            log::e(&format!("arcore::lib::on_touched tracking_state = {}", tracking_state));
-                            ArAnchor_release(anchor);
-                            return -1;
-                        }
-
-
-                        let mut color = [0.0, 0.0, 0.0, 0.0];
-                        match trackable_type as u32 {
-                            AR_TRACKABLE_POINT => {
-                                color[0] = 66.0;
-                                color[1] = 133.0;
-                                color[2] = 244.0;
-                                color[3] = 255.0;
-                            }
-                            AR_TRACKABLE_PLANE => {
-                                color[0] = 139.0;
-                                color[1] = 195.0;
-                                color[2] = 74.0;
-                                color[3] = 255.0;
-                            }
-                            _ => {
-                                color[0] = 0.0;
-                                color[1] = 0.0;
-                                color[2] = 0.0;
-                                color[3] = 0.0;
-                            }
-                        }
-
-                        let colored_anchor = ColoredAnchor { anchor, color };
-
-                        log::d(&format!("arcore::lib::on_touched i : {}, colored_anchor: {:?}", i, &colored_anchor));
-
-                        // self.plane_obj_map_.insert(i, colored_anchor);
-
-                        return i;
-                    } else if AR_TRACKABLE_POINT as i32 == ar_trackable_type {
-//                        let mut ar_point: *mut ArPoint = ::std::mem::transmute::<*mut ArTrackable, *mut ArPoint>(ar_trackable);
-//                        let mut mode: ArPointOrientationMode = 0;
-//
-//                        ArPoint_getOrientationMode(self.ar_session as *const ArSession,
-//                                                   ar_point as *const ArPoint,
-//                                                   &mut mode as *mut ArPointOrientationMode);
-//
-//                        if mode == AR_POINT_ORIENTATION_ESTIMATED_SURFACE_NORMAL as i32 {
-//                            ar_hit_result = ar_hit;
-//                            trackable_type = ar_trackable_type;
-//                            break;
-//                        }
-                        return -1;
-                    }
+            let mut hit_result: *mut ArHitResult = ::std::ptr::null_mut();
+            let mut trackable_type: ArTrackableType = AR_TRACKABLE_NOT_VALID as i32;
+            for i in 0..hit_result_list_size {
+                ArHitResult_create(
+                    self.ar_session as *const ArSession,
+                    &mut hit_result,
+                );
+                ArHitResultList_getItem(
+                    self.ar_session as *const ArSession,
+                    hit_result_list as *const ArHitResultList,
+                    i,
+                    hit_result,
+                );
+                if hit_result == ::std::ptr::null_mut() {
+                    log::e(&format!("arcore::lib::on_touched ArHitResultList_getItem error"));
+                    return -1;
                 }
 
-                ArHitResultList_destroy(hit_result_list);
-                hit_result_list = ::std::ptr::null_mut();
+                // Get Trackable Type
+                let mut trackable: *mut ArTrackable = ::std::ptr::null_mut();
+                ArHitResult_acquireTrackable(
+                    self.ar_session as *const ArSession,
+                    hit_result as *const ArHitResult,
+                    &mut trackable,
+                );
+                ArTrackable_getType(
+                    self.ar_session as *const ArSession,
+                    trackable as *const ArTrackable,
+                    &mut trackable_type as *mut ArTrackableType,
+                );
 
-                return -1;
+                if trackable_type == AR_TRACKABLE_PLANE as i32 {
+                    // Get Post
+                    let mut pose: *mut ArPose = ::std::ptr::null_mut();
+                    ArPose_create(self.ar_session as *const ArSession, 0 as *const _, &mut pose);
+                    ArHitResult_getHitPose(
+                        self.ar_session as *const ArSession,
+                        hit_result as *const ArHitResult,
+                        pose,
+                    );
+
+                    // Get Plane
+                    let mut in_polygon = 0;
+                    let plane: *mut ArPlane = ::std::mem::transmute::<*mut ArTrackable, *mut ArPlane>(trackable);
+                    ArPlane_isPoseInPolygon(
+                        self.ar_session as *const ArSession,
+                        plane as *const ArPlane,
+                        pose as *const ArPose,
+                        &mut in_polygon as *mut i32,
+                    );
+                    ArPose_destroy(pose);
+                    if in_polygon != 0 {
+                        log::e(&format!("arcore::lib::on_touched in_polygon = {}", in_polygon));
+                        return -1;
+                    }
+
+                    // Get Anchor
+                    let mut anchor: *mut ArAnchor = ::std::ptr::null_mut();
+                    let status: ArStatus = ArHitResult_acquireNewAnchor(self.ar_session, hit_result, &mut anchor);
+                    if status != AR_SUCCESS as i32 {
+                        log::e(&format!("arcore::lib::on_touched ArHitResult_acquireNewAnchor error"));
+                        return -1;
+                    }
+
+                    let mut tracking_state: ArTrackingState = AR_TRACKING_STATE_STOPPED as i32;
+                    ArAnchor_getTrackingState(
+                        self.ar_session as *const ArSession,
+                        anchor as *const ArAnchor,
+                        &mut tracking_state as *mut ArTrackingState);
+
+                    if tracking_state != AR_TRACKING_STATE_TRACKING as i32 {
+                        log::e(&format!("arcore::lib::on_touched tracking_state = {}", tracking_state));
+                        ArAnchor_release(anchor);
+                        return -1;
+                    }
+
+                    // Get Color
+                    let mut color = [0.0, 0.0, 0.0, 0.0];
+                    match trackable_type as u32 {
+                        AR_TRACKABLE_POINT => {
+                            color[0] = 66.0;
+                            color[1] = 133.0;
+                            color[2] = 244.0;
+                            color[3] = 255.0;
+                        }
+                        AR_TRACKABLE_PLANE => {
+                            color[0] = 139.0;
+                            color[1] = 195.0;
+                            color[2] = 74.0;
+                            color[3] = 255.0;
+                        }
+                        _ => {
+                            color[0] = 0.0;
+                            color[1] = 0.0;
+                            color[2] = 0.0;
+                            color[3] = 0.0;
+                        }
+                    }
+
+                    // Get ColoredAnchor
+                    // let mut colored_anchor = ColoredAnchor { anchor, color };
+                    self.anchored = true;
+                    self.anchor = anchor;
+                    self.color  = color;
+                    // log::d(&format!("arcore::lib::on_touched i : {}, colored_anchor: {:?}", i, &colored_anchor));
+                    // self.plane_obj_map_.insert(i, colored_anchor);
+
+                    return i;
+                } else if AR_TRACKABLE_POINT as i32 == trackable_type {
+                    let point: *mut ArPoint = ::std::mem::transmute::<*mut ArTrackable, *mut ArPoint>(trackable);
+                    let mut mode: ArPointOrientationMode = 0;
+
+                    ArPoint_getOrientationMode(
+                        self.ar_session as *const ArSession,
+                        point as *const ArPoint,
+                        &mut mode as *mut ArPointOrientationMode,
+                    );
+
+                    if mode == AR_POINT_ORIENTATION_ESTIMATED_SURFACE_NORMAL as i32 {
+                        break;
+                    }
+                    return -1;
+                }
             }
-            -1
+
+            ArHitResultList_destroy(hit_result_list);
+            hit_result_list = ::std::ptr::null_mut();
+
+            return -1;
         }
     }
 
@@ -559,6 +537,10 @@ impl ArCore {
             }
         }
     }
+
+
+    // -------------------- private functions -----------------------
+
 
     fn init_renderers(&mut self) {
         self.init_render_background();
@@ -591,15 +573,11 @@ impl ArCore {
         }
     }
 
-    fn init_render_plane(&mut self) {
+    fn init_render_point(&mut self) {}
 
-    }
+    fn init_render_plane(&mut self) {}
 
-    fn init_render_point(&mut self) {
 
-    }
-
-    // private functions
     fn render_background(&mut self) {
         log::i("arcore::lib::render_background\n");
         unsafe {
@@ -620,20 +598,11 @@ impl ArCore {
                 self.uvs_initialized_ = true;
             }
 
-            // let mut frame_timestamp: i64 = 0;
-            // ArFrame_getTimestamp(session, frame, &mut frame_timestamp as *mut i64);
-            // if frame_timestamp == 0 {
-            //     return
-            // }
-
-            // if depth_texture_id_ == -1 || camera_texture_id_ == -1 {
-            //     return
-            // }
-
-            // log::d(&format!("arcore::lib::render_background camera_program : {}\n", &self.camera_program_));
-            // log::d(&format!("arcore::lib::render_background camera_texture_uniform : {}\n", &self.camera_texture_uniform_));
-            // log::d(&format!("arcore::lib::render_background camera_position_attrib : {}\n", &self.camera_position_attrib_));
-            // log::d(&format!("arcore::lib::render_background camera_tex_coord_attrib : {}\n", &self.camera_tex_coord_attrib_));
+            let mut frame_timestamp: i64 = 0;
+            ArFrame_getTimestamp(self.ar_session, self.ar_frame, &mut frame_timestamp as *mut i64);
+            if frame_timestamp == 0 {
+                return;
+            }
 
             glesv2::use_program(self.camera_program_);
             glesv2::depth_mask(false);
@@ -641,20 +610,6 @@ impl ArCore {
             glesv2::uniform1i(self.camera_texture_uniform_ as i32, 1);
             glesv2::active_texture(glesv2::GL_TEXTURE1);
             glesv2::bind_texture(GL_TEXTURE_EXTERNAL_OES, self.camera_texture_id_);
-
-            // let vbo = glesv2::gen_buffers(2);
-            //
-            // glesv2::bind_buffer(glesv2::GL_ARRAY_BUFFER, vbo[0]);
-            // glesv2::buffer_data(glesv2::GL_ARRAY_BUFFER, &K_VERS, glesv2::GL_STATIC_DRAW);
-            // glesv2::enable_vertex_attrib_array(self.camera_position_attrib_);
-            // glesv2::vertex_attrib_pointer(self.camera_position_attrib_, 2, glesv2::GL_FLOAT, false, 0, &[0]);
-            //
-            // glesv2::bind_buffer(glesv2::GL_ARRAY_BUFFER, vbo[1]);
-            // glesv2::buffer_data(glesv2::GL_ARRAY_BUFFER, &self.uvs_transformed_, glesv2::GL_STATIC_DRAW);
-            // glesv2::enable_vertex_attrib_array(self.camera_tex_coord_attrib_);
-            // glesv2::vertex_attrib_pointer(self.camera_tex_coord_attrib_, 2, glesv2::GL_FLOAT, false, 0, &[0]);
-            //
-            // glesv2::draw_arrays(glesv2::GL_TRIANGLE_STRIP, 0, 4);
 
             glesv2::enable_vertex_attrib_array(self.camera_position_attrib_);
             glesv2::vertex_attrib_pointer(self.camera_position_attrib_, 2, glesv2::GL_FLOAT, false, 0, &K_VERS);
@@ -664,8 +619,8 @@ impl ArCore {
 
             glesv2::draw_arrays(glesv2::GL_TRIANGLE_STRIP, 0, 4);
 
-            glesv2::use_program(0);
-            glesv2::depth_mask(true);
+            // glesv2::use_program(0);
+            // glesv2::depth_mask(true);
         }
     }
 
@@ -743,57 +698,88 @@ impl ArCore {
         }
     }
 
-    fn update_proj_view_matrix(&mut self) {
+
+    fn update_matrix_of_project_and_view(&mut self) {
         log::i("arcore::lib::update_proj_view_matrix\n");
         unsafe {
             let mut out_camera: *mut ArCamera = ::std::ptr::null_mut();
-            ArFrame_acquireCamera(self.ar_session as *const ArSession,
-                                  self.ar_frame as *const ArFrame,
-                                  &mut out_camera);
 
-            ArCamera_getProjectionMatrix(self.ar_session as *const ArSession,
-                                         out_camera as *const ArCamera,
-                                         0.1,
-                                         100.0,
-                                         self.proj_mat4x4.as_mut_ptr());
-            ArCamera_getViewMatrix(self.ar_session as *const ArSession,
-                                   out_camera as *const ArCamera,
-                                   self.view_mat4x4.as_mut_ptr());
+            ArFrame_acquireCamera(
+                self.ar_session as *const ArSession,
+                self.ar_frame as *const ArFrame,
+                &mut out_camera,
+            );
+
+            ArCamera_getProjectionMatrix(
+                self.ar_session as *const ArSession,
+                out_camera as *const ArCamera,
+                0.1,
+                100.0,
+                self.proj_mat4x4.as_mut_ptr(),
+            );
+
+            ArCamera_getViewMatrix(
+                self.ar_session as *const ArSession,
+                out_camera as *const ArCamera,
+                self.view_mat4x4.as_mut_ptr(),
+            );
 
             ArCamera_release(out_camera);
-
-            // let p = util::get_mat4_from_array(self.proj_mat4x4);
-            // let v = util::get_mat4_from_array(self.view_mat4x4);
         }
     }
-}
 
+    fn update_matrix_of_model(&mut self) {
+        self.update_matrix_of_model_by_track_type_and_index(1, 0);
+    }
 
-fn get_matrix_by_anchor_and_index(session: *mut ArSession, obj_map: &HashMap<i32, ColoredAnchor>, index: i32) -> [f32; 16] {
-    let mut mode_mat4x4 = [0.0; 16];
-    match obj_map.get(&index) {
-        Some(colored_anchor) => {
+    fn update_matrix_of_model_by_track_type_and_index(&mut self, track_type: i32, index: i32) {
+        if self.anchored {
+
+            let anchor = self.anchor;
+
+            log::d(&format!("arcore::lib::update_matrix_of_model_by_track_type_and_index anchor = {:?}\n", anchor));
+
             let mut tracking_state: ArTrackingState = AR_TRACKING_STATE_STOPPED as i32;
-            unsafe { ArAnchor_getTrackingState(session as *const ArSession, colored_anchor.anchor, &mut tracking_state as *mut ArTrackingState) };
+            unsafe {
+                ArAnchor_getTrackingState(
+                    self.ar_session as *const ArSession,
+                    anchor as *const ArAnchor,
+                    &mut tracking_state as *mut ArTrackingState)
+            };
+
             if tracking_state == AR_TRACKING_STATE_TRACKING as i32 {
-                get_transform_matrix_from_anchor(session, colored_anchor.anchor, mode_mat4x4.as_mut_ptr())
+                self.transform_matrix_of_model_from_anchor(anchor);
+
+                let vm = util::get_mat4_from_array(self.view_mat4x4) * util::get_mat4_from_array(self.mode_mat4x4);
+                self.view_mat4x4 = util::get_array_from_mat4(vm)
             }
         }
-        None => {}
-    }
-    log::print_matrix("arcore::lib::::get_mode_matrix", &mode_mat4x4);
-    mode_mat4x4
-}
 
-fn get_transform_matrix_from_anchor(session: *mut ArSession, anchor: *mut ArAnchor, out_model_mat: *mut f32) {
-    unsafe {
-        if out_model_mat == ::std::ptr::null_mut() {
-            return;
+        // let obj_map = match track_type {
+        //     1 => &self.plane_obj_map_,
+        //     2 => &self.image_obj_map_,
+        //     3 => &self.faces_obj_map_,
+        //     _ => &self.plane_obj_map_,
+        // };
+        // match obj_map.get(&index) {
+        //     Some(colored_anchor) => {
+        //         let mut tracking_state: ArTrackingState = AR_TRACKING_STATE_STOPPED as i32;
+        //         unsafe { ArAnchor_getTrackingState(self.ar_session as *const ArSession, colored_anchor.anchor, &mut tracking_state as *mut ArTrackingState) };
+        //         if tracking_state == AR_TRACKING_STATE_TRACKING as i32 {
+        //             self.get_transform_matrix_from_anchor(colored_anchor.anchor)
+        //         }
+        //     }
+        //     None => ()
+        // }
+    }
+
+    fn transform_matrix_of_model_from_anchor(&mut self, anchor: *mut ArAnchor) {
+        unsafe {
+            let mut out_pose: *mut ArPose = 0 as *mut _;
+            ArPose_create(self.ar_session as *const ArSession, 0 as *const _, &mut out_pose);
+            ArAnchor_getPose(self.ar_session as *const ArSession, anchor as *const ArAnchor, out_pose as *mut ArPose);
+            ArPose_getMatrix(self.ar_session as *const ArSession, out_pose as *const ArPose, self.mode_mat4x4.as_mut_ptr());
         }
-        let mut out_pose: *mut ArPose = 0 as *mut _;
-        ArPose_create(session as *const ArSession, 0 as *const _, &mut out_pose);
-        ArAnchor_getPose(session as *const ArSession, anchor as *const ArAnchor, out_pose as *mut ArPose);
-        ArPose_getMatrix(session as *const ArSession, out_pose as *const ArPose, out_model_mat);
     }
 }
 
@@ -808,7 +794,6 @@ fn get_ar_image_from_camera(session: *const ArSession, frame: *const ArFrame) ->
     }
 }
 
-// java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "ArImage_getFormat"
 fn get_ar_image_format(session: *const ArSession, ar_image: *const ArImage) -> i32 {
     unsafe {
         let mut height = 0;

@@ -354,25 +354,32 @@ void WebGLContext::DrawBackground() {
   on_draw_frame(&arcore);
 }
 
+void WebGLContext::OnTouched(GLfloat x, GLfloat y) {
+  const FuncScope funcScope(*this, "onTouched");
+  if (IsContextLost()) return;
+
+  on_touched(&arcore, x, y);
+}
+
 float* WebGLContext::GetProjectMatrix() {
   const FuncScope funcScope(*this, "getProjectMatrix");
 
-  int mat_len = sizeof(arcore.proj_mat4x4) / sizeof(arcore.proj_mat4x4[0]);
-  LOGD("WebGLContext::GetProjectMatrix----mat_len: %d", mat_len);
-  for (int i = 0; i < mat_len; i++) {
-    LOGD("WebGLContext::GetProjectMatrix----arcore.proj_mat4x4[%d] = %f", i, arcore.proj_mat4x4[i]);
-  }
+//  int mat_len = sizeof(arcore.proj_mat4x4) / sizeof(arcore.proj_mat4x4[0]);
+//  LOGD("WebGLContext::GetProjectMatrix----mat_len: %d", mat_len);
+//  for (int i = 0; i < mat_len; i++) {
+//    LOGD("WebGLContext::GetProjectMatrix----arcore.proj_mat4x4[%d] = %f", i, arcore.proj_mat4x4[i]);
+//  }
   return arcore.proj_mat4x4;
 }
 
 float* WebGLContext::GetViewMatrix() {
   const FuncScope funcScope(*this, "getViewMatrix");
 
-  int mat_len = sizeof(arcore.view_mat4x4) / sizeof(arcore.view_mat4x4[0]);
-  LOGD("WebGLContext::GetViewMatrix----mat_len: %d", mat_len);
-  for (int i = 0; i < mat_len; i++) {
-    LOGD("WebGLContext::GetViewMatrix----arcore.view_mat4x4[%d] = %f", i, arcore.view_mat4x4[i]);
-  }
+//  int mat_len = sizeof(arcore.view_mat4x4) / sizeof(arcore.view_mat4x4[0]);
+//  LOGD("WebGLContext::GetViewMatrix----mat_len: %d", mat_len);
+//  for (int i = 0; i < mat_len; i++) {
+//    LOGD("WebGLContext::GetViewMatrix----arcore.view_mat4x4[%d] = %f", i, arcore.view_mat4x4[i]);
+//  }
   return arcore.view_mat4x4;
 }
 

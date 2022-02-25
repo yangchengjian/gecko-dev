@@ -3,7 +3,6 @@ use std::fs::File;
 use std::io::Read;
 
 use opengles::glesv2;
-use rgb::*;
 use crate::log;
 
 pub fn load_shader(shader_type: glesv2::GLenum, shader_source: &[u8]) -> glesv2::GLuint {
@@ -80,63 +79,6 @@ pub fn create_program(vertex_source: &[u8], fragment_source: &[u8]) -> glesv2::G
     }
 }
 
-// pub fn read_image_from_resource(file: &str) {
-//     let mut path = env::current_exe().unwrap();
-//     log::d(&format!("arcore::util::read_image_from_resource path0 =  {:?}", &path));
-//     path = path.canonicalize().unwrap();
-//     log::d(&format!("arcore::util::read_image_from_resource path1 =  {:?}", &path));
-//     while path.pop() {
-//         path.push("resources");
-//         if path.is_dir() {
-//             break;
-//         }
-//         path.pop();
-//     }
-//     path.push(file);
-//
-//     let mut state = ::lodepng::State::new();
-// //    state.remember_unknown_chunks(true);
-//
-//     log::d(&format!("arcore::util::read_image_from_resource path =  {:?}", path));
-//     match state.decode_file(&path) {
-//         Ok(image) =>
-//             match image {
-//                 ::lodepng::Image::RGBA(bitmap) => {
-//                     let image_u8: &[u8] = bitmap.buffer.as_bytes();
-//                     log::d(&format!("arcore::util::read_image_from_resource width = {} height = x {}", &bitmap.width, &bitmap.height));
-//                     log::d(&format!("arcore::util::read_image_from_resource path =  {:?}", image_u8));
-//                 }
-//                 other => {
-//                     log::e(&format!("arcore::util::read_image_from_resource  Could not load file , other: {:?}", other));
-//                 }
-//             },
-//         Err(e) => {
-//             log::e(&format!("arcore::util::read_image_from_resource  Could not load file , because: {}", e));
-//         }
-//     }
-// }
-
-// // Read file from resourse
-// pub fn read_file_from_resource(file: &str) -> Vec<u8> {
-//     let mut path = env::current_exe().unwrap();
-//     path = path.canonicalize().unwrap();
-//     while path.pop() {
-//         path.push("resources");
-//         if path.is_dir() {
-//             break;
-//         }
-//         path.pop();
-//     }
-//     path.push(file);
-//     let mut buffer = vec![];
-//     File::open(path)
-//         .expect(&format!("Can't find file: {}", file))
-//         .read_to_end(&mut buffer)
-//         .expect("Can't read file");
-//     buffer
-// }
-
-
 pub fn convert_rgba_to_grayscale(
     image_pixel_buffer: *mut u8,
     width: u32,
@@ -158,12 +100,6 @@ pub fn convert_rgba_to_grayscale(
             let g = unsafe { *pixel.offset(1 as isize) as f32};
             let b = unsafe { *pixel.offset(2 as isize) as f32};
 
-//            if w == 100 && h % 10 == 0 {
-//                log::d(&format!("arcore::util::convert_rgba_to_grayscale r : {:?}", &r));
-//                log::d(&format!("arcore::util::convert_rgba_to_grayscale g : {:?}", &g));
-//                log::d(&format!("arcore::util::convert_rgba_to_grayscale b : {:?}", &b));
-//                log::d(&format!("arcore::util::convert_rgba_to_grayscale buffer i = {}, v = {:?}", w + h * grayscale_stride, (0.213 * r + 0.715 * g + 0.072 * b) as u8));
-//            }
             unsafe { *grayscale_buffer.offset((w + h * grayscale_stride) as isize) = (0.213 * r + 0.715 * g + 0.072 * b) as u8 };
 
         }

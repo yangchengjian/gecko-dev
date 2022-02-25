@@ -565,6 +565,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   void DrawBuffers(const std::vector<GLenum>& buffers);
   // ArCore
   void DrawBackground();
+  void OnTouched(GLfloat x, GLfloat y);
   float* GetProjectMatrix();
   float* GetViewMatrix();
   void GetModelMatrix(GLint type, GLint index, float*);

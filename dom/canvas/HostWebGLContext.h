@@ -332,6 +332,10 @@ class HostWebGLContext final : public SupportsWeakPtr {
     mContext->DrawBackground();
   }
 
+  void OnTouched(GLfloat x, GLfloat y) const {
+    mContext->OnTouched(x, y);
+  }
+
   float* GetProjectMatrix() const {
     return mContext->GetProjectMatrix();
   }

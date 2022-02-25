@@ -22,7 +22,6 @@ nalgebra-glm = "0.3"
 ndk = "0.6.0"
 ndk-sys = "0.3.0"
 opengles = "0.1.2"
-rgb = "0.8"
 serde = "1.0"
 
 
