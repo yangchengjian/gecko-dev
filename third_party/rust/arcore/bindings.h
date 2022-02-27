@@ -20,6 +20,11 @@ struct ArCore {
   GLuint camera_texture_id_;
   float uvs_transformed_[8];
   bool uvs_initialized_;
+  GLuint point_program_;
+  GLuint point_attribute_vertices_;
+  GLuint point_uniform_color_;
+  GLuint point_uniform_mvp_mat_;
+  GLuint point_uniform_point_size_;
   bool anchored;
   ArAnchor *anchor;
   float color[4];

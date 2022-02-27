@@ -26,14 +26,6 @@ use crate::ffi_arcore::*;
 pub const GL_TEXTURE_EXTERNAL_OES: glesv2::GLenum = 0x8D65;
 pub const K_NUM_VERTICES: i32 = 4;
 
-// UVs of the quad vertices (S, T)
-const K_UVS: [f32; 8] = [
-    0.0, 1.0,
-    1.0, 1.0,
-    0.0, 0.0,
-    1.0, 0.0,
-];
-
 const K_VERS: [f32; 8] = [
     -1.0, -1.0,
     1.0, -1.0,
@@ -63,6 +55,32 @@ uniform samplerExternalOES sTexture;
 
 void main() {
     gl_FragColor = texture2D(sTexture, v_TexCoord);
+}
+\0";
+
+
+const VS_SRC_POINT: &'static [u8] = b"
+uniform mat4 u_ModelViewProjection;
+uniform vec4 u_Color;
+uniform float u_PointSize;
+
+attribute vec4 a_Position;
+
+varying vec4 v_Color;
+
+void main() {
+   v_Color = u_Color;
+   gl_Position = u_ModelViewProjection * vec4(a_Position.xyz, 1.0);
+   gl_PointSize = u_PointSize;
+}
+\0";
+
+const FS_SRC_POINT: &'static [u8] = b"
+precision mediump float;
+varying vec4 v_Color;
+
+void main() {
+    gl_FragColor = v_Color;
 }
 \0";
 
@@ -158,6 +176,13 @@ pub struct ArCore {
     // show_point: bool,
     // show_image: bool,
     // show_faces: bool,
+
+    // Point --------------------------------------------------
+    point_program_: glesv2::GLuint,
+    point_attribute_vertices_: glesv2::GLuint,
+    point_uniform_color_: glesv2::GLuint,
+    point_uniform_mvp_mat_: glesv2::GLuint,
+    point_uniform_point_size_: glesv2::GLuint,
 
     anchored: bool,
     anchor: *mut ArAnchor,
@@ -256,6 +281,12 @@ impl ArCore {
                 // show_image: false,
                 // show_faces: false,
 
+                point_program_: 0,
+                point_attribute_vertices_: 0,
+                point_uniform_color_: 0,
+                point_uniform_mvp_mat_: 0,
+                point_uniform_point_size_: 0,
+
                 anchored: false,
                 anchor: std::ptr::null_mut(),
                 color: [0.0; 4],
@@ -308,8 +339,9 @@ impl ArCore {
 
     pub fn on_surface_created(&mut self) {
         log::i("arcore::lib::on_surface_created\n");
-
-        self.init_renderers();
+        self.init_render_background();
+        // self.init_render_plane();
+        // self.init_render_point();
     }
 
     pub fn on_display_changed(&mut self, rotation: i32, width: i32, height: i32) {
@@ -352,6 +384,9 @@ impl ArCore {
 
             // Render Background
             self.render_background();
+
+            // Render Point Cloud
+            // self.render_point_cloud();
         }
     }
 
@@ -488,7 +523,7 @@ impl ArCore {
                     // let mut colored_anchor = ColoredAnchor { anchor, color };
                     self.anchored = true;
                     self.anchor = anchor;
-                    self.color  = color;
+                    self.color = color;
                     // log::d(&format!("arcore::lib::on_touched i : {}, colored_anchor: {:?}", i, &colored_anchor));
                     // self.plane_obj_map_.insert(i, colored_anchor);
 
@@ -541,13 +576,6 @@ impl ArCore {
 
     // -------------------- private functions -----------------------
 
-
-    fn init_renderers(&mut self) {
-        self.init_render_background();
-        // self.init_render_plane();
-        // self.init_render_point();
-    }
-
     fn init_render_background(&mut self) {
         unsafe {
             // Camera
@@ -561,19 +589,37 @@ impl ArCore {
                 log::e("arcore::background_renderer::new Could not create camera program.\n");
             }
 
-            let camera_position_attrib = glesv2::get_attrib_location(camera_program, "a_Position") as u32;
+            let camera_position_attrib  = glesv2::get_attrib_location(camera_program, "a_Position") as u32;
             let camera_tex_coord_attrib = glesv2::get_attrib_location(camera_program, "a_TexCoord") as u32;
-            let camera_texture_uniform = glesv2::get_uniform_location(camera_program, "sTexture") as u32;
+            let camera_texture_uniform  = glesv2::get_uniform_location(camera_program, "sTexture") as u32;
 
-            self.camera_program_ = camera_program;
-            self.camera_position_attrib_ = camera_position_attrib;
+            self.camera_program_          = camera_program;
+            self.camera_position_attrib_  = camera_position_attrib;
             self.camera_tex_coord_attrib_ = camera_tex_coord_attrib;
-            self.camera_texture_uniform_ = camera_texture_uniform;
-            self.camera_texture_id_ = camera_texture_id;
+            self.camera_texture_uniform_  = camera_texture_uniform;
+            self.camera_texture_id_       = camera_texture_id;
         }
     }
 
-    fn init_render_point(&mut self) {}
+    fn init_render_point(&mut self) {
+        unsafe {
+            let point_program = util::create_program(VS_SRC_POINT, FS_SRC_POINT);
+            if point_program == 0 {
+                log::e("arcore::point_cloud_renderer::new Could not create program.");
+            }
+
+            let point_attribute_vertices = glesv2::get_attrib_location(point_program, "a_Position") as u32;
+            let point_uniform_color      = glesv2::get_uniform_location(point_program, "u_Color") as u32;
+            let point_uniform_mvp_mat    = glesv2::get_uniform_location(point_program, "u_ModelViewProjection") as u32;
+            let point_uniform_point_size = glesv2::get_uniform_location(point_program, "u_PointSize") as u32;
+
+            self.point_program_            = point_program;
+            self.point_attribute_vertices_ = point_attribute_vertices;
+            self.point_uniform_color_      = point_uniform_color;
+            self.point_uniform_mvp_mat_    = point_uniform_mvp_mat;
+            self.point_uniform_point_size_ = point_uniform_point_size;
+        }
+    }
 
     fn init_render_plane(&mut self) {}
 
@@ -604,40 +650,84 @@ impl ArCore {
                 return;
             }
 
-            glesv2::use_program(self.camera_program_);
-            glesv2::depth_mask(false);
-
-            glesv2::uniform1i(self.camera_texture_uniform_ as i32, 1);
-            glesv2::active_texture(glesv2::GL_TEXTURE1);
-            glesv2::bind_texture(GL_TEXTURE_EXTERNAL_OES, self.camera_texture_id_);
-
-            glesv2::enable_vertex_attrib_array(self.camera_position_attrib_);
-            glesv2::vertex_attrib_pointer(self.camera_position_attrib_, 2, glesv2::GL_FLOAT, false, 0, &K_VERS);
-
-            glesv2::enable_vertex_attrib_array(self.camera_tex_coord_attrib_);
-            glesv2::vertex_attrib_pointer(self.camera_tex_coord_attrib_, 2, glesv2::GL_FLOAT, false, 0, &self.uvs_transformed_);
-
-            glesv2::draw_arrays(glesv2::GL_TRIANGLE_STRIP, 0, 4);
-
-            // glesv2::use_program(0);
-            // glesv2::depth_mask(true);
+            self.render_background_gl();
         }
     }
 
-    fn render_point_cloud(&mut self, mvp_matrix: ::glm::Mat4) {
+    fn render_background_gl(&mut self) {
+        glesv2::use_program(self.camera_program_);
+        glesv2::depth_mask(false);
+
+        glesv2::uniform1i(self.camera_texture_uniform_ as i32, 1);
+        glesv2::active_texture(glesv2::GL_TEXTURE1);
+        glesv2::bind_texture(GL_TEXTURE_EXTERNAL_OES, self.camera_texture_id_);
+
+        glesv2::enable_vertex_attrib_array(self.camera_position_attrib_);
+        glesv2::vertex_attrib_pointer(self.camera_position_attrib_, 2, glesv2::GL_FLOAT, false, 0, &K_VERS);
+
+        glesv2::enable_vertex_attrib_array(self.camera_tex_coord_attrib_);
+        glesv2::vertex_attrib_pointer(self.camera_tex_coord_attrib_, 2, glesv2::GL_FLOAT, false, 0, &self.uvs_transformed_);
+
+        glesv2::draw_arrays(glesv2::GL_TRIANGLE_STRIP, 0, 4);
+
+        // glesv2::use_program(0);
+        glesv2::depth_mask(true);
+    }
+
+    fn render_point_cloud(&mut self) {
         log::i("arcore::lib::render_point_cloud\n");
-        // Update and render point cloud.
         unsafe {
-            let mut ar_point_cloud: *mut ArPointCloud = ::std::ptr::null_mut();
-            let point_cloud_status =
-                ArFrame_acquirePointCloud(self.ar_session as *const ArSession,
-                                          self.ar_frame as *const ArFrame,
-                                          &mut ar_point_cloud);
+            let mut point_cloud: *mut ArPointCloud = ::std::ptr::null_mut();
+            let point_cloud_status = ArFrame_acquirePointCloud(
+                self.ar_session as *const ArSession,
+                self.ar_frame as *const ArFrame,
+                &mut point_cloud,
+            );
 
             if point_cloud_status == AR_SUCCESS as i32 {
-                // self.clone().renderer_point_cloud_.unwrap().draw(mvp_matrix, self.ar_session, ar_point_cloud);
-                ArPointCloud_release(ar_point_cloud);
+                self.render_point_cloud_gl(point_cloud);
             }
+
+            ArPointCloud_release(point_cloud);
+        }
+    }
+
+    fn render_point_cloud_gl(&mut self, point_cloud: *mut ArPointCloud) {
+        unsafe {
+            let mut number_of_points: usize = 0;
+            ArPointCloud_getNumberOfPoints(
+                self.ar_session as *const ArSession,
+                point_cloud as *const ArPointCloud,
+                &mut number_of_points as *mut usize as *mut i32,
+            );
+
+            if number_of_points <= 0 { return; }
+
+            let mut point_cloud_data: *const f32 = 0 as *const f32;
+            ArPointCloud_getData(
+                self.ar_session as *const ArSession,
+                point_cloud as *const ArPointCloud,
+                &mut point_cloud_data,
+            );
+
+            glesv2::use_program(self.point_program_);
+
+            let mvp_matrix = util::get_mat4_from_array(self.proj_mat4x4) * util::get_mat4_from_array(self.view_mat4x4);
+            let mvp_array = util::get_array_from_mat4(mvp_matrix);
+            let color = [31.0f32 / 255.0f32, 188.0f32 / 255.0f32, 210.0f32 / 255.0f32, 1.0f32];
+            let point_size = [5.0f32];
+
+            glesv2::uniform_matrix4fv(self.point_uniform_mvp_mat_ as i32, false, &mvp_array);
+            glesv2::uniform4fv(self.point_uniform_color_ as i32, &color);
+            glesv2::uniform1fv(self.point_uniform_point_size_ as i32, &point_size);
+
+            let mut point_cloud_vertexs = ::std::slice::from_raw_parts(point_cloud_data, number_of_points * 4);
+            glesv2::enable_vertex_attrib_array(self.point_attribute_vertices_);
+            glesv2::vertex_attrib_pointer(self.point_attribute_vertices_, 4, glesv2::GL_FLOAT, false, 0, &point_cloud_vertexs);
+
+            glesv2::draw_arrays(glesv2::GL_POINTS, 0, number_of_points as i32);
+
+            // glesv2::use_program(0);
         }
     }
 
@@ -734,7 +824,6 @@ impl ArCore {
 
     fn update_matrix_of_model_by_track_type_and_index(&mut self, track_type: i32, index: i32) {
         if self.anchored {
-
             let anchor = self.anchor;
 
             log::d(&format!("arcore::lib::update_matrix_of_model_by_track_type_and_index anchor = {:?}\n", anchor));

@@ -43,6 +43,12 @@ struct ArCore {
 //  bool show_image;
 //  bool show_faces;
 
+  GLuint point_program_;
+  GLuint point_attribute_vertices_;
+  GLuint point_uniform_color_;
+  GLuint point_uniform_mvp_mat_;
+  GLuint point_uniform_point_size_;
+
   bool anchored;
   ArAnchor *anchor;
   float color[4];
