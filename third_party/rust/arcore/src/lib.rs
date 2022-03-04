@@ -670,6 +670,9 @@ impl ArCore {
 
         glesv2::draw_arrays(glesv2::GL_TRIANGLE_STRIP, 0, 4);
 
+        glesv2::disable_vertex_attrib_array(self.camera_position_attrib_);
+        glesv2::disable_vertex_attrib_array(self.camera_tex_coord_attrib_);
+
         // glesv2::use_program(0);
         glesv2::depth_mask(true);
     }
