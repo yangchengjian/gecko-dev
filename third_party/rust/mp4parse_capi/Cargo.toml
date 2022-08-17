@@ -21,7 +21,7 @@ exclude = [
 ]
 
 [badges]
-travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
+travis-ci = { repository = "ssh://git@github.com/mozilla/mp4parse-rust" }
 
 [dependencies]
 byteorder = "1.2.1"

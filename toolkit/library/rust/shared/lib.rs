@@ -124,3 +124,5 @@ pub extern "C" fn debug_log(target: *const c_char, message: *const c_char) {
         info!(target: CStr::from_ptr(target).to_str().unwrap(), "{}", CStr::from_ptr(message).to_str().unwrap());
     }
 }
+
+extern crate arcore;

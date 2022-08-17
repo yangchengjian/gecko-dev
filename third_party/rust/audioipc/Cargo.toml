@@ -36,7 +36,7 @@ features = ["winapi"]
 [target.'cfg(windows)'.dependencies]
 mio = "0.6.19"
 miow = "0.3.3"
-mio-named-pipes = { git = "https://github.com/kinetiknz/mio-named-pipes", rev = "21c26326f5f45f415c49eac4ba5bc41a2f961321" }
+mio-named-pipes = { git = "ssh://git@github.com/kinetiknz/mio-named-pipes", rev = "21c26326f5f45f415c49eac4ba5bc41a2f961321" }
 winapi = { version = "0.3.6", features = ["combaseapi", "memoryapi", "objbase"] }
 
 [target.'cfg(target_os = "android")'.dependencies]

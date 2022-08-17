@@ -147,7 +147,9 @@ DIRS += [
     "config",
     "python",
     "testing",
+    "third_party/glm",
     "third_party/python",
+    "third_party/rust/arcore",
 ]
 
 if not CONFIG["JS_STANDALONE"]:

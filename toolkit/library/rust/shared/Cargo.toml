@@ -10,7 +10,7 @@ moz_asserts = "0.1"
 geckoservo = { path = "../../../../servo/ports/geckolib" }
 kvstore = { path = "../../../components/kvstore" }
 lmdb-rkv-sys = { version = "0.11", features = ["mdb_idl_logn_9"] }
-mp4parse_capi = { git = "https://github.com/mozilla/mp4parse-rust", rev = "3bfc47d9a571d0842676043ba60716318e946c06", features = ["missing-pixi-permitted"] }
+mp4parse_capi = { git = "ssh://git@github.com/mozilla/mp4parse-rust", rev = "3bfc47d9a571d0842676043ba60716318e946c06", features = ["missing-pixi-permitted"] }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 netwerk_helper = { path = "../../../../netwerk/base/rust-helper" }
@@ -20,13 +20,13 @@ static_prefs = { path = "../../../../modules/libpref/init/static_prefs" }
 profiler_helper = { path = "../../../../tools/profiler/rust-helper", optional = true }
 mozurl = { path = "../../../../netwerk/base/mozurl" }
 webrender_bindings = { path = "../../../../gfx/webrender_bindings" }
-cubeb-coreaudio = { git = "https://github.com/mozilla/cubeb-coreaudio-rs", rev = "44eca95823bb57e964cf7b6d9791ed2ccb4b2108", optional = true }
-cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="df4dc0288b07b865440f4c7e41ca49ca9ccffc63", optional = true, features=["pulse-dlopen"] }
+cubeb-coreaudio = { git = "git+ssh://git@github.com/mozilla/cubeb-coreaudio-rs", rev = "44eca95823bb57e964cf7b6d9791ed2ccb4b2108", optional = true }
+cubeb-pulse = { git = "git+ssh://git@github.com/mozilla/cubeb-pulse-rs", rev="df4dc0288b07b865440f4c7e41ca49ca9ccffc63", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.10", optional = true, features=["gecko-in-tree"] }
-audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "85e9839059f4bf8f68130825b8fd02c39a6a51b9", optional = true } # macos (v2) branch
-audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "85e9839059f4bf8f68130825b8fd02c39a6a51b9", optional = true } # macos (v2) branch
-audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "c144368c4e084ec0f076af6262970655c2d99e8d", optional = true }
-audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "c144368c4e084ec0f076af6262970655c2d99e8d", optional = true }
+audioipc2-client = { git = "git+ssh://git@github.com/kinetiknz/audioipc-2", rev = "85e9839059f4bf8f68130825b8fd02c39a6a51b9", optional = true } # macos (v2) branch
+audioipc2-server = { git = "git+ssh://git@github.com/kinetiknz/audioipc-2", rev = "85e9839059f4bf8f68130825b8fd02c39a6a51b9", optional = true } # macos (v2) branch
+audioipc-client = { git = "git+ssh://git@github.com/mozilla/audioipc-2", rev = "c144368c4e084ec0f076af6262970655c2d99e8d", optional = true }
+audioipc-server = { git = "git+ssh://git@github.com/mozilla/audioipc-2", rev = "c144368c4e084ec0f076af6262970655c2d99e8d", optional = true }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 authenticator = "0.3.1"
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
@@ -47,7 +47,7 @@ audio_thread_priority = { version = "0.26.1", default_features = false, features
 mdns_service = { path="../../../../dom/media/webrtc/transport/mdns_service", optional = true }
 neqo_glue = { path = "../../../../netwerk/socket/neqo_glue" }
 wgpu_bindings = { path = "../../../../gfx/wgpu_bindings" }
-mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", rev = "746743227485a83123784df0c53227ab466612ed" }
+mapped_hyph = { git = "ssh://git@github.com/jfkthame/mapped_hyph.git", rev = "746743227485a83123784df0c53227ab466612ed" }
 fog_control = { path = "../../../components/glean" }
 app_services_logger = { path = "../../../../services/common/app_services_logger" }
 http_sfv = { path = "../../../../netwerk/base/http-sfv" }
@@ -77,8 +77,10 @@ localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
 processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
 
+arcore = { path = "../../../../third_party/rust/arcore" }
+
 [target.'cfg(not(target_os = "android"))'.dependencies]
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "c51b63595a27a6ef45161012323e0261475c10c9"}
+viaduct = { git = "ssh://git@github.com/mozilla/application-services", rev = "c51b63595a27a6ef45161012323e0261475c10c9"}
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 
 [target.'cfg(target_os = "windows")'.dependencies]

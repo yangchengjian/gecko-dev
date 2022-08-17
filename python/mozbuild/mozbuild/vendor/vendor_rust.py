@@ -240,11 +240,14 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
     BUILDTIME_LICENSE_WHITELIST = {
         "BSD-3-Clause": [
             "bindgen",
+            "bindgen-0.56.0",
             "fuchsia-zircon",
             "fuchsia-zircon-sys",
             "fuchsia-cprng",
             "glsl",
             "instant",
+            "nalgebra",
+            "nalgebra-glm",
         ]
     }
 

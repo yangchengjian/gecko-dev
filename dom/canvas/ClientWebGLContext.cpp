@@ -39,6 +39,14 @@
 #include "WebGLChild.h"
 #include "WebGLValidateStrings.h"
 
+#include <typeinfo>
+#include  <android/log.h>
+
+#define  TAG  "android_ndk_in_arcore"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,TAG,__VA_ARGS__)
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,TAG,__VA_ARGS__)
+
 namespace mozilla {
 
 namespace webgl {
@@ -2814,6 +2822,83 @@ void ClientWebGLContext::DepthRange(GLclampf zNear, GLclampf zFar) {
   state.mDepthRange = {zNear, zFar};
 
   Run<RPROC(DepthRange)>(zNear, zFar);
+}
+
+// ArCore
+void ClientWebGLContext::DrawBackground() {
+  const FuncScope funcScope(*this, "drawBackground");
+  if (IsContextLost()) return;
+
+  const auto& inProcess = mNotLost->inProcess;
+  if (inProcess) {
+    inProcess->DrawBackground();
+  }
+}
+
+void ClientWebGLContext::OnTouched(GLfloat x, GLfloat y) {
+  const FuncScope funcScope(*this, "onTouched");
+  if (IsContextLost()) return;
+
+  const auto& inProcess = mNotLost->inProcess;
+  if (inProcess) {
+    inProcess->OnTouched(x, y);
+  }
+}
+
+void ClientWebGLContext::GetProjectMatrix(JSContext* cx, JS::MutableHandle<JS::Value> retval) {
+  retval.set(JS::NullValue());
+  const FuncScope funcScope(*this, "getProjectMatrix");
+  if (IsContextLost()) return;
+
+  float mat[16] = { 0.0 };
+  const auto& inProcess = mNotLost->inProcess;
+  if (inProcess) {
+    float* mat_proj = inProcess->GetProjectMatrix();
+    for (int i = 0; i < 16; i++) {
+      mat[i] = mat_proj[i];
+    }
+//    int mat_len = sizeof(mat) / sizeof(mat[0]);
+//    LOGD("ClientWebGLContext::GetProjectMatrix----mat_len: %d", mat_len);
+//    for (int i = 0; i < mat_len; i++) {
+//      LOGD("ClientWebGLContext::GetProjectMatrix----mat[%d]: %f", i, mat[i]);
+//    }
+  }
+
+  JSObject* obj = dom::Float32Array::Create(cx, this, 16, mat);
+  retval.set(JS::ObjectOrNullValue(obj));
+}
+
+void ClientWebGLContext::GetViewMatrix(JSContext* cx, JS::MutableHandle<JS::Value> retval) {
+  retval.set(JS::NullValue());
+  const FuncScope funcScope(*this, "getViewMatrix");
+  if (IsContextLost()) return;
+
+  float mat[16] = { 0.0 };
+  const auto& inProcess = mNotLost->inProcess;
+  if (inProcess) {
+    float* mat_view = inProcess->GetViewMatrix();
+    for (int i = 0; i < 16; i++) {
+      mat[i] = mat_view[i];
+    }
+//    int mat_len = sizeof(mat) / sizeof(mat[0]);
+//    LOGD("ClientWebGLContext::GetViewMatrix----mat_len: %d", mat_len);
+//    for (int i = 0; i < mat_len; i++) {
+//      LOGD("ClientWebGLContext::GetViewMatrix----mat[%d]: %f", i, mat[i]);
+//    }
+  }
+
+  JSObject* obj = dom::Float32Array::Create(cx, this, 16, mat);
+  retval.set(JS::ObjectOrNullValue(obj));
+}
+
+void ClientWebGLContext::GetModelMatrix(JSContext* cx, GLint type, GLint index, JS::MutableHandle<JS::Value> retval) {
+  retval.set(JS::NullValue());
+  const FuncScope funcScope(*this, "getModelMatrix");
+  if (IsContextLost()) return;
+
+  float mat[16] = { 0.0 };
+  JSObject* obj = dom::Float32Array::Create(cx, this, 16, reinterpret_cast<const float*>(mat));
+  retval.set(JS::ObjectOrNullValue(obj));
 }
 
 void ClientWebGLContext::Flush(const bool flushGl) {

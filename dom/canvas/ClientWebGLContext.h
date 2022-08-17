@@ -23,6 +23,8 @@
 #include "mozilla/Logging.h"
 #include "WebGLCommandQueue.h"
 
+#include "arcore_bindings.h"
+
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -1284,6 +1286,9 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                      const Range<const uint8_t>& view, GLuint srcElemOffset);
 
  public:
+  ArCore arcore;
+
+ public:
   void ClearBufferfv(GLenum buffer, GLint drawBuffer, const Float32ListU& list,
                      GLuint srcElemOffset) {
     ClearBufferTv(buffer, drawBuffer, webgl::AttribBaseType::Float,
@@ -1323,6 +1328,17 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void DepthMask(WebGLboolean b);
 
   void DepthRange(GLclampf zNear, GLclampf zFar);
+
+  // ArCore
+  void DrawBackground();
+
+  void OnTouched(GLfloat x, GLfloat y);
+
+  void GetProjectMatrix(JSContext* cx, JS::MutableHandle<JS::Value> retval);
+
+  void GetViewMatrix(JSContext* cx, JS::MutableHandle<JS::Value> retval);
+
+  void GetModelMatrix(JSContext* cx, GLint type, GLint index, JS::MutableHandle<JS::Value> retval);
 
   void Flush(bool flushGl = true);
 

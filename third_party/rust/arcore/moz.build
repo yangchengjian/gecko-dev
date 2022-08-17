@@ -1,0 +1,7 @@
+# if CONFIG["OS_ARCH"] == "Linux" and CONFIG["OS_TARGET"] != "Android":
+if CONFIG["MOZ_BUILD_APP"] == "mobile/android":
+
+    EXPORTS += [
+        "include/arcore_bindings.h",
+        "include/arcore_c_api.h",
+    ]

@@ -54,6 +54,13 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/StaticPrefs_webgl.h"
 
+#include  <android/log.h>
+
+#define  TAG  "android_ndk_in_arcore"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,TAG,__VA_ARGS__)
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,TAG,__VA_ARGS__)
+
 namespace mozilla {
 
 using namespace mozilla::dom;
@@ -337,6 +344,48 @@ void WebGLContext::DepthRange(GLfloat zNear, GLfloat zFar) {
         "the near value is greater than the far value!");
 
   gl->fDepthRange(zNear, zFar);
+}
+
+// ArCore
+void WebGLContext::DrawBackground() {
+  const FuncScope funcScope(*this, "drawBackground");
+  if (IsContextLost()) return;
+
+  on_draw_frame(&arcore);
+}
+
+void WebGLContext::OnTouched(GLfloat x, GLfloat y) {
+  const FuncScope funcScope(*this, "onTouched");
+  if (IsContextLost()) return;
+
+  on_touched(&arcore, x, y);
+}
+
+float* WebGLContext::GetProjectMatrix() {
+  const FuncScope funcScope(*this, "getProjectMatrix");
+
+//  int mat_len = sizeof(arcore.proj_mat4x4) / sizeof(arcore.proj_mat4x4[0]);
+//  LOGD("WebGLContext::GetProjectMatrix----mat_len: %d", mat_len);
+//  for (int i = 0; i < mat_len; i++) {
+//    LOGD("WebGLContext::GetProjectMatrix----arcore.proj_mat4x4[%d] = %f", i, arcore.proj_mat4x4[i]);
+//  }
+  return arcore.proj_mat4x4;
+}
+
+float* WebGLContext::GetViewMatrix() {
+  const FuncScope funcScope(*this, "getViewMatrix");
+
+//  int mat_len = sizeof(arcore.view_mat4x4) / sizeof(arcore.view_mat4x4[0]);
+//  LOGD("WebGLContext::GetViewMatrix----mat_len: %d", mat_len);
+//  for (int i = 0; i < mat_len; i++) {
+//    LOGD("WebGLContext::GetViewMatrix----arcore.view_mat4x4[%d] = %f", i, arcore.view_mat4x4[i]);
+//  }
+  return arcore.view_mat4x4;
+}
+
+void WebGLContext::GetModelMatrix(GLint type, GLint index, float* mat) {
+  const FuncScope funcScope(*this, "getModelMatrix");
+  if (IsContextLost()) return;
 }
 
 // -
@@ -1432,6 +1481,8 @@ void WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height) {
   height = std::min(height, static_cast<GLsizei>(limits.maxViewportDim));
 
   gl->fViewport(x, y, width, height);
+
+  on_display_changed(&arcore, 0, width, height);
 
   mViewportX = x;
   mViewportY = y;
