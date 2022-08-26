@@ -45,6 +45,8 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 
+#include "arcore_bindings.h"
+
 #include <list>
 
 class nsIDocShell;
@@ -204,6 +206,16 @@ struct BufferAndIndex final {
 ////////////////////////////////////////////////////////////////////////////////
 
 class WebGLContext : public VRefCounted, public SupportsWeakPtr {
+
+  // ArCore
+   public:
+    ArCore arcore;
+    void DrawBackground();
+    void OnTouched(GLfloat x, GLfloat y);
+    float* GetProjectMatrix();
+    float* GetViewMatrix();
+    void GetModelMatrix(GLint type, GLint index, float*);
+
   friend class ScopedDrawCallWrapper;
   friend class ScopedDrawWithTransformFeedback;
   friend class ScopedFakeVertexAttrib0;

@@ -64,6 +64,37 @@ using namespace mozilla::gl;
 //  WebGL API
 //
 
+// ArCore
+void WebGLContext::DrawBackground() {
+  const FuncScope funcScope(*this, "drawBackground");
+  if (IsContextLost()) return;
+
+  on_draw_frame(&arcore);
+}
+
+void WebGLContext::OnTouched(GLfloat x, GLfloat y) {
+  const FuncScope funcScope(*this, "onTouched");
+  if (IsContextLost()) return;
+
+  on_touched(&arcore, x, y);
+}
+
+float* WebGLContext::GetProjectMatrix() {
+  const FuncScope funcScope(*this, "getProjectMatrix");
+  return arcore.proj_mat4x4;
+}
+
+float* WebGLContext::GetViewMatrix() {
+  const FuncScope funcScope(*this, "getViewMatrix");
+  return arcore.view_mat4x4;
+}
+
+void WebGLContext::GetModelMatrix(GLint type, GLint index, float* mat) {
+  const FuncScope funcScope(*this, "getModelMatrix");
+  if (IsContextLost()) return;
+}
+
+
 void WebGLContext::ActiveTexture(uint32_t texUnit) {
   FuncScope funcScope(*this, "activeTexture");
   if (IsContextLost()) return;
@@ -1441,6 +1472,8 @@ void WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height) {
   height = std::min(height, static_cast<GLsizei>(limits.maxViewportDim));
 
   gl->fViewport(x, y, width, height);
+
+  on_display_changed(&arcore, 0, width, height);
 
   mViewportX = x;
   mViewportY = y;

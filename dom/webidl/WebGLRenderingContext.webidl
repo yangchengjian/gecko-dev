@@ -718,6 +718,13 @@ interface mixin WebGLRenderingContextBase {
                              GLboolean normalized, GLsizei stride, GLintptr offset);
 
     void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
+
+    // ArCore
+    void drawBackground();
+    void onTouched(GLfloat x, GLfloat y);
+    any getProjectMatrix();
+    any getViewMatrix();
+    any getModelMatrix(GLint track_type, GLint index);
 };
 
 [Exposed=(Window,Worker),

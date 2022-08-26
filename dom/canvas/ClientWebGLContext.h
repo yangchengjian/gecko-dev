@@ -23,6 +23,8 @@
 #include "mozilla/Logging.h"
 #include "WebGLCommandQueue.h"
 
+#include "arcore_bindings.h"
+
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -2236,6 +2238,16 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   bool mResetLayer = true;
   Maybe<const WebGLContextOptions> mInitialOptions;
   bool mXRCompatible = false;
+
+  // ------------------------- ArCore ---------------------------
+  public:
+    ArCore arcore;
+    void DrawBackground();
+    void OnTouched(GLfloat x, GLfloat y);
+    void GetProjectMatrix(JSContext* cx, JS::MutableHandle<JS::Value> retval);
+    void GetViewMatrix(JSContext* cx, JS::MutableHandle<JS::Value> retval);
+    void GetModelMatrix(JSContext* cx, GLint type, GLint index, JS::MutableHandle<JS::Value> retval);
+
 };
 
 // used by DOM bindings in conjunction with GetParentObject

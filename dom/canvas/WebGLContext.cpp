@@ -685,6 +685,11 @@ void WebGLContext::FinishInit() {
 
   gl->ResetSyncCallCount("WebGLContext Initialization");
   LoseLruContextIfLimitExceeded();
+
+  JNIEnv* const env = jni::GetEnvForThread();
+  init_arcore(&arcore, env);
+  on_surface_created(&arcore);
+  on_display_changed(&arcore, 0, size.width, size.height);
 }
 
 void WebGLContext::SetCompositableHost(

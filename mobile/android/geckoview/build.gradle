@@ -213,6 +213,8 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "androidx.lifecycle:lifecycle-common-java8:2.4.0"
 
+    implementation 'com.google.ar:core:1.17.0'
+
     if (mozconfig.substs.MOZ_ANDROID_HLS_SUPPORT) {
         implementation project(":exoplayer2")
     }
@@ -383,6 +385,7 @@ android.libraryVariants.all { variant ->
 apply plugin: 'maven-publish'
 
 version = getVersionNumber()
+println("version = " + version)
 group = 'org.mozilla.geckoview'
 
 def getArtifactId() {
