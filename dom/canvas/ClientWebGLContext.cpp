@@ -127,6 +127,73 @@ ClientWebGLContext::ClientWebGLContext(const bool webgl2)
 
 ClientWebGLContext::~ClientWebGLContext() { RemovePostRefreshObserver(); }
 
+// ArCore
+void ClientWebGLContext::DrawBackground() {
+  const FuncScope funcScope(*this, "drawBackground");
+  if (IsContextLost()) return;
+
+  const auto& inProcess = mNotLost->inProcess;
+  if (inProcess) {
+    inProcess->DrawBackground();
+  }
+}
+
+void ClientWebGLContext::OnTouched(GLfloat x, GLfloat y) {
+  const FuncScope funcScope(*this, "onTouched");
+  if (IsContextLost()) return;
+
+  const auto& inProcess = mNotLost->inProcess;
+  if (inProcess) {
+    inProcess->OnTouched(x, y);
+  }
+}
+
+void ClientWebGLContext::GetProjectMatrix(JSContext* cx, JS::MutableHandle<JS::Value> retval) {
+  retval.set(JS::NullValue());
+  const FuncScope funcScope(*this, "getProjectMatrix");
+  if (IsContextLost()) return;
+
+  float mat[16] = { 0.0 };
+  const auto& inProcess = mNotLost->inProcess;
+  if (inProcess) {
+    float* mat_proj = inProcess->GetProjectMatrix();
+    for (int i = 0; i < 16; i++) {
+      mat[i] = mat_proj[i];
+    }
+  }
+
+  JSObject* obj = dom::Float32Array::Create(cx, this, 16, mat);
+  retval.set(JS::ObjectOrNullValue(obj));
+}
+
+void ClientWebGLContext::GetViewMatrix(JSContext* cx, JS::MutableHandle<JS::Value> retval) {
+  retval.set(JS::NullValue());
+  const FuncScope funcScope(*this, "getViewMatrix");
+  if (IsContextLost()) return;
+
+  float mat[16] = { 0.0 };
+  const auto& inProcess = mNotLost->inProcess;
+  if (inProcess) {
+    float* mat_view = inProcess->GetViewMatrix();
+    for (int i = 0; i < 16; i++) {
+      mat[i] = mat_view[i];
+    }
+  }
+
+  JSObject* obj = dom::Float32Array::Create(cx, this, 16, mat);
+  retval.set(JS::ObjectOrNullValue(obj));
+}
+
+void ClientWebGLContext::GetModelMatrix(JSContext* cx, GLint type, GLint index, JS::MutableHandle<JS::Value> retval) {
+  retval.set(JS::NullValue());
+  const FuncScope funcScope(*this, "getModelMatrix");
+  if (IsContextLost()) return;
+
+  float mat[16] = { 0.0 };
+  JSObject* obj = dom::Float32Array::Create(cx, this, 16, reinterpret_cast<const float*>(mat));
+  retval.set(JS::ObjectOrNullValue(obj));
+}
+
 void ClientWebGLContext::JsWarning(const std::string& utf8) const {
   nsIGlobalObject* global = nullptr;
   if (mCanvasElement) {

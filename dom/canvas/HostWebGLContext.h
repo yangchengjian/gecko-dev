@@ -67,6 +67,28 @@ class HostWebGLContext final : public SupportsWeakPtr {
     return std::make_unique<LockedOutstandingContexts>();
   }
 
+// ArCore
+ public:
+  void DrawBackground() const {
+    mContext->DrawBackground();
+  }
+
+  void OnTouched(GLfloat x, GLfloat y) const {
+    mContext->OnTouched(x, y);
+  }
+
+  float* GetProjectMatrix() const {
+    return mContext->GetProjectMatrix();
+  }
+
+  float* GetViewMatrix() const {
+    return mContext->GetViewMatrix();
+  }
+
+  void GetModelMatrix(GLint type, GLint index, float* mat) const {
+    mContext->GetModelMatrix(type, index, mat);
+  }
+
  public:
   struct OwnerData final {
     ClientWebGLContext* inProcess = nullptr;

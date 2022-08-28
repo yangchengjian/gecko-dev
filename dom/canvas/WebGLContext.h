@@ -46,6 +46,8 @@
 
 #include <list>
 
+#include "arcore_bindings.h"
+
 class nsIDocShell;
 
 // WebGL-only GLenums
@@ -203,6 +205,16 @@ struct BufferAndIndex final {
 ////////////////////////////////////////////////////////////////////////////////
 
 class WebGLContext : public VRefCounted, public SupportsWeakPtr {
+
+// ArCore
+  public:
+   ArCore arcore;
+   void DrawBackground();
+   void OnTouched(GLfloat x, GLfloat y);
+   float* GetProjectMatrix();
+   float* GetViewMatrix();
+   void GetModelMatrix(GLint type, GLint index, float*);
+
   friend class ScopedDrawCallWrapper;
   friend class ScopedDrawWithTransformFeedback;
   friend class ScopedFakeVertexAttrib0;
